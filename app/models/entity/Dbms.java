@@ -1,5 +1,5 @@
 package models.entity;
 
-public enum DbmsType {
+public enum Dbms {
     PostgreSQL
 }

@@ -18,5 +18,5 @@ class Database extends BaseModel {
 
   @NotNull
   @Enumerated
-  var dbms: DbmsType = DbmsType.PostgreSQL
+  var dbms: Dbms = Dbms.PostgreSQL
 }

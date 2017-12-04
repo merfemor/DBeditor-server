@@ -2,6 +2,7 @@ package controllers
 
 import javax.inject._
 
+import models.entity.UserRight
 import models.repository.{DatabaseRepository, UserRepository}
 import play.Logger
 import play.api.mvc._
@@ -13,7 +14,11 @@ class HomeController @Inject()(cc: ControllerComponents,
 
   def index() = Action { implicit request: Request[AnyContent] =>
     Logger.debug(userRepository.list.toString)
-    Logger.debug(databaseRepository.list.get(0).dbms.toString)
+    //Logger.debug(databaseRepository.list.get(0).dbms.toString)
+    var ur = new UserRight()
+    Logger.debug("right = " + ur.right)
+    ur.right = models.entity.Right.READ_ONLY
+    Logger.debug("right = " + ur.right)
     Ok(views.html.main())
   }
 }
