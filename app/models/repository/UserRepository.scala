@@ -3,14 +3,15 @@ package models.repository
 import java.util
 import javax.inject.Inject
 
-import io.ebean.{Ebean, EbeanServer}
 import models.entity.User
 import play.db.ebean.EbeanConfig
 
-class UserRepository @Inject()(ebeanConfig: EbeanConfig) {
-  val ebeanServer: EbeanServer = Ebean.getServer(ebeanConfig.defaultServer())
+class UserRepository @Inject()(ebeanConfig: EbeanConfig) extends BaseRepository[User](ebeanConfig: EbeanConfig) {
 
-  def list: util.List[User] = {
-    ebeanServer.find(classOf[User]).findList()
-  }
+  def page(page: Int, pageSize: Int): util.List[User] =
+    ebeanServer.find(classOf[User])
+      .setFirstRow(page * pageSize)
+      .setMaxRows(pageSize)
+      .findPagedList
+      .getList
 }

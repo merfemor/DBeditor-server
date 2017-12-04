@@ -6,7 +6,7 @@ import io.ebean.Model
 import io.ebean.annotation.NotNull
 
 @Embeddable
-class UserRightId {
+private class UserRightId {
   var userId: Long = _
   var databaseId: Long = _
 
