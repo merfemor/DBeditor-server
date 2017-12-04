@@ -37,11 +37,11 @@ class UserRightId {
 class UserRight extends Model {
 
   @MapsId
-  @ManyToOne(optional = false)
+  @ManyToOne(optional = false, fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id")
   var user: User = _
   @MapsId
-  @ManyToOne(optional = false)
+  @ManyToOne(optional = false, fetch = FetchType.LAZY)
   @JoinColumn(name = "database_id")
   var database: Database = _
   /**

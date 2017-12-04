@@ -12,8 +12,8 @@ class Database extends BaseModel {
   @Lob
   var url: String = _
 
-  @ManyToOne(optional = false)
-  @JoinColumn
+  @ManyToOne(optional = false, fetch = FetchType.LAZY)
+  @JoinColumn(name = "creator_id")
   var creator: User = _
 
   @NotNull

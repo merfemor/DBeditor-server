@@ -8,5 +8,5 @@ import io.ebean.Model
 class BaseModel extends Model {
   @Id
   @GeneratedValue
-  var id: Long = 0
+  var id: Long = _
 }
