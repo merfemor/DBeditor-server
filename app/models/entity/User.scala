@@ -1,6 +1,7 @@
 package models.entity
 
-import javax.persistence.{Entity, Lob, Table}
+import java.util
+import javax.persistence._
 
 import io.ebean.annotation.NotNull
 
@@ -18,4 +19,11 @@ class User extends BaseModel {
   @NotNull
   @Lob
   var password: String = _
+
+  @ManyToOne(cascade = Array(CascadeType.ALL), fetch = FetchType.LAZY)
+  var databases: util.List[Database] = _
+
+  @OneToOne(cascade = Array(CascadeType.ALL), optional = true, orphanRemoval = true)
+  @PrimaryKeyJoinColumn
+  var unverifiedUserInfo: UnverifiedUserInfo = _
 }
