@@ -21,9 +21,5 @@ class User extends BaseModel {
   var password: String = _
 
   @ManyToOne(cascade = Array(CascadeType.ALL), fetch = FetchType.LAZY)
-  var databases: util.List[Database] = _
-
-  @OneToOne(cascade = Array(CascadeType.ALL), optional = true, orphanRemoval = true)
-  @PrimaryKeyJoinColumn
-  var unverifiedUserInfo: UnverifiedUserInfo = _
+  var databases: util.Set[Database] = _
 }
