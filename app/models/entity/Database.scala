@@ -12,7 +12,6 @@ class Database extends BaseModel {
   @Lob
   var url: String = _
 
-
   @ManyToOne(optional = false)
   @JoinColumn
   var creator: User = _
