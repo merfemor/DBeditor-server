@@ -20,7 +20,11 @@ class UserRightController @Inject()(cc: ControllerComponents,
 
   def revokeRight(userId: Long, databaseId: Long) = Action { implicit request: Request[AnyContent] =>
     val right = userRightsRepository.findRight(userId, databaseId, Right.READ_ONLY)
-    right.delete()
-    Ok(views.html.main())
+    if (right.isDefined) {
+      right.get.delete()
+      Ok("revoked")
+    } else {
+      Ok("not found")
+    }
   }
 }

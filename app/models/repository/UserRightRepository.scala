@@ -1,7 +1,9 @@
 package models.repository
 
 import javax.inject.Inject
+import javax.persistence.EntityNotFoundException
 
+import io.ebean.Ebean
 import models.entity.{Right, UserRight}
 import play.db.ebean.EbeanConfig
 
@@ -23,14 +25,18 @@ class UserRightRepository @Inject()(override protected val ebeanConfig: EbeanCon
   def grantRight(userId: Long, databaseId: Long, right: Right): Unit = {
     val newRight = new UserRight(userId, databaseId)
     newRight.right = right
-    ebeanServer.insert(newRight)
+    Ebean.insert(newRight)
   }
 
 
-  def findRight(userId: Long, databaseId: Long, right: Right): UserRight = {
+  def findRight(userId: Long, databaseId: Long, right: Right): Option[UserRight] = {
     val userRight = new UserRight(userId, databaseId)
     userRight.right = right
-    userRight.refresh()
-    userRight
+    try {
+      userRight.refresh()
+      Some(userRight)
+    } catch {
+      case e: EntityNotFoundException => None
+    }
   }
 }
