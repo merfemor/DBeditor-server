@@ -9,7 +9,8 @@ import play.api.mvc._
 
 @Singleton
 class UserController @Inject()(cc: ControllerComponents,
-                               userRepository: UserRepository)
+                               userRepository: UserRepository,
+                               userRightsRepository: UserRightRepository)
   extends AbstractController(cc) {
 
 
@@ -29,7 +30,7 @@ class UserController @Inject()(cc: ControllerComponents,
 
 
   def databaseUserInfo(userId: Long, databaseId: Long) = Action { implicit request: Request[AnyContent] =>
-    val rights = userRepository.rightsIn(userId, databaseId)
+    val rights = userRightsRepository.rightsIn(userId, databaseId)
     Ok(rights.head.toString)
   }
 }

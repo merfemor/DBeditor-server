@@ -8,13 +8,15 @@ import models.entity.{Database, User}
 import play.db.ebean.EbeanConfig
 
 
-class DatabaseRepository @Inject()(override protected val ebeanConfig: EbeanConfig) extends BaseRepository[Database](ebeanConfig: EbeanConfig) {
+class DatabaseRepository @Inject()(override protected val ebeanConfig: EbeanConfig)
+  extends IdEntityRepository[Database](ebeanConfig: EbeanConfig) {
 
   def createdBy(creatorId: Long): util.List[Database] =
     ebeanServer.find(classOf[Database])
       .where()
       .eq("creator_id", creatorId)
       .findList()
+
 
   def managedOrCreatedBy(userId: Long): util.List[Database] =
     ebeanServer.find(classOf[Database])
@@ -30,6 +32,7 @@ class DatabaseRepository @Inject()(override protected val ebeanConfig: EbeanConf
       .where()
       .eq("userRights.userRightId.userId", userId)
       .findList()
+
 
   def usersOf(databaseId: Long): util.List[User] =
     ebeanServer.find(classOf[User])

@@ -51,6 +51,12 @@ class UserRight extends Model {
   @EmbeddedId
   private var userRightId: UserRightId = new UserRightId
 
+  def this(userId: Long, databaseId: Long) {
+    this()
+    userRightId.userId = userId
+    userRightId.databaseId = databaseId
+  }
+
   def right: Right = userRightId.right
 
   def right_=(r: Right): Unit = userRightId.right = r

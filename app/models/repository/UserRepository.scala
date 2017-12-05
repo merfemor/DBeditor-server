@@ -3,12 +3,11 @@ package models.repository
 import java.util
 import javax.inject.Inject
 
-import models.entity.{User, UserRight}
+import models.entity.User
 import play.db.ebean.EbeanConfig
 
-import scala.collection.JavaConversions._
-
-class UserRepository @Inject()(override protected val ebeanConfig: EbeanConfig) extends BaseRepository[User](ebeanConfig: EbeanConfig) {
+class UserRepository @Inject()(override protected val ebeanConfig: EbeanConfig)
+  extends IdEntityRepository[User](ebeanConfig: EbeanConfig) {
 
   def page(page: Int, pageSize: Int): util.List[User] =
     ebeanServer.find(classOf[User])
@@ -16,15 +15,4 @@ class UserRepository @Inject()(override protected val ebeanConfig: EbeanConfig) 
       .setMaxRows(pageSize)
       .findPagedList
       .getList
-
-
-  def rightsIn(userId: Long, databaseId: Long) = {
-    ebeanServer.find(classOf[UserRight])
-      .where()
-      .eq("database_id", databaseId)
-      .where()
-      .eq("user_id", userId)
-      .findList()
-      .map(userRight => userRight.right)
-  }
 }
