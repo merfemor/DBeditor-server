@@ -1,5 +1,6 @@
 package models.entity
 
+import java.util
 import javax.persistence._
 
 import io.ebean.annotation.NotNull
@@ -19,4 +20,8 @@ class Database extends BaseModel {
   @NotNull
   @Enumerated
   var dbms: Dbms = Dbms.PostgreSQL
+
+  @OneToMany(mappedBy = "database")
+  @PrimaryKeyJoinColumn
+  private var userRights: util.List[UserRight] = _
 }

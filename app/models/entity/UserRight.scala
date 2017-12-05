@@ -6,8 +6,9 @@ import io.ebean.Model
 import io.ebean.annotation.NotNull
 
 @Embeddable
-private class UserRightId {
+protected class UserRightId {
   var userId: Long = _
+  @Column(name = "database_id")
   var databaseId: Long = _
 
   @NotNull
@@ -42,7 +43,7 @@ class UserRight extends Model {
   var user: User = _
   @MapsId
   @ManyToOne(optional = false, fetch = FetchType.LAZY)
-  @JoinColumn(name = "database_id")
+  @JoinColumn(name = "database_id", referencedColumnName = "id")
   var database: Database = _
   /**
     * This field is private for the same reason as [[UnverifiedUserInfo.userId]].

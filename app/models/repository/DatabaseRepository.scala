@@ -3,23 +3,31 @@ package models.repository
 import java.util
 import javax.inject.Inject
 
-import io.ebean.{Ebean, EbeanServer}
-import models.entity.{Database, User, UserRight}
+import io.ebean.Expr
+import models.entity.Database
 import play.db.ebean.EbeanConfig
 
-class DatabaseRepository @Inject()(ebeanConfig: EbeanConfig) {
-  val ebeanServer: EbeanServer = Ebean.getServer(ebeanConfig.defaultServer())
 
-  def all: util.List[Database] = {
-    ebeanServer.find(classOf[Database]).findList()
-  }
+class DatabaseRepository @Inject()(override protected val ebeanConfig: EbeanConfig) extends BaseRepository[Database](ebeanConfig: EbeanConfig) {
 
-  def ofUser(user: User): util.List[Database] = {
+  def createdBy(creatorId: Long): util.List[Database] =
     ebeanServer.find(classOf[Database])
-      .fetch("user")
-      .where().idEq(user.id)
+      .where()
+      .eq("creator_id", creatorId)
       .findList()
-  }
 
-  def allUserRights: util.List[UserRight] = ebeanServer.find(classOf[UserRight]).findList()
+  def managedOrCreatedBy(userId: Long): util.List[Database] =
+    ebeanServer.find(classOf[Database])
+      .where()
+      .or(
+        Expr.eq("userRights.userRightId.userId", userId),
+        Expr.eq("creator_id", userId)
+      ).findList()
+
+
+  def managedBy(userId: Long): util.List[Database] =
+    ebeanServer.find(classOf[Database])
+      .where()
+      .eq("userRights.userRightId.userId", userId)
+      .findList()
 }
