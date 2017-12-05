@@ -22,4 +22,8 @@ class User extends BaseModel {
 
   @OneToMany(cascade = Array(CascadeType.ALL), mappedBy = "creator", fetch = FetchType.LAZY)
   var createdDatabases: util.List[Database] = new util.LinkedList[Database]
+
+  @OneToMany(mappedBy = "user")
+  @PrimaryKeyJoinColumn
+  private var userRights: util.List[UserRight] = _
 }

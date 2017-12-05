@@ -36,7 +36,6 @@ protected class UserRightId {
 @Entity
 @Table
 class UserRight extends Model {
-
   @MapsId
   @ManyToOne(optional = false, fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id")
@@ -45,6 +44,7 @@ class UserRight extends Model {
   @ManyToOne(optional = false, fetch = FetchType.LAZY)
   @JoinColumn(name = "database_id", referencedColumnName = "id")
   var database: Database = _
+
   /**
     * This field is private for the same reason as [[UnverifiedUserInfo.userId]].
     */

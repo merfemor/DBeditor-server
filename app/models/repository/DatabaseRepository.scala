@@ -4,7 +4,7 @@ import java.util
 import javax.inject.Inject
 
 import io.ebean.Expr
-import models.entity.Database
+import models.entity.{Database, User}
 import play.db.ebean.EbeanConfig
 
 
@@ -29,5 +29,11 @@ class DatabaseRepository @Inject()(override protected val ebeanConfig: EbeanConf
     ebeanServer.find(classOf[Database])
       .where()
       .eq("userRights.userRightId.userId", userId)
+      .findList()
+
+  def usersOf(databaseId: Long): util.List[User] =
+    ebeanServer.find(classOf[User])
+      .where()
+      .eq("userRights.userRightId.databaseId", databaseId)
       .findList()
 }

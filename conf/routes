@@ -1,4 +1,5 @@
 GET        /                          controllers.HomeController.index
 GET        /users                     controllers.UserController.list
 GET        /user/:id/databases        controllers.DatabaseController.databasesOfUser(id: Long)
+GET        /database/:id/users        controllers.DatabaseController.usersOfDatabase(id: Long)
 GET        /assets/*file              controllers.Assets.versioned(path="/public", file: Asset)
