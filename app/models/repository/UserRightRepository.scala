@@ -25,4 +25,12 @@ class UserRightRepository @Inject()(override protected val ebeanConfig: EbeanCon
     newRight.right = right
     ebeanServer.insert(newRight)
   }
+
+
+  def findRight(userId: Long, databaseId: Long, right: Right): UserRight = {
+    val userRight = new UserRight(userId, databaseId)
+    userRight.right = right
+    userRight.refresh()
+    userRight
+  }
 }

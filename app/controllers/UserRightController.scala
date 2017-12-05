@@ -17,4 +17,10 @@ class UserRightController @Inject()(cc: ControllerComponents,
     userRightsRepository.grantRight(userId, databaseId, Right.READ_ONLY)
     Ok("Sample tet")
   }
+
+  def revokeRight(userId: Long, databaseId: Long) = Action { implicit request: Request[AnyContent] =>
+    val right = userRightsRepository.findRight(userId, databaseId, Right.READ_ONLY)
+    right.delete()
+    Ok(views.html.main())
+  }
 }
