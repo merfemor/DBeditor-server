@@ -26,4 +26,10 @@ class UserController @Inject()(cc: ControllerComponents,
 
     Ok(views.html.main())
   }
+
+
+  def databaseUserInfo(userId: Long, databaseId: Long) = Action { implicit request: Request[AnyContent] =>
+    val rights = userRepository.rightsIn(userId, databaseId)
+    Ok(rights.head.toString)
+  }
 }
