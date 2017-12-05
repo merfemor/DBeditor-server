@@ -21,7 +21,7 @@ class Database extends BaseModel {
   @Enumerated
   var dbms: Dbms = Dbms.PostgreSQL
 
-  @OneToMany(mappedBy = "database")
+  @OneToMany(mappedBy = "database", cascade = Array(CascadeType.ALL))
   @PrimaryKeyJoinColumn
   private var userRights: util.List[UserRight] = _
 }

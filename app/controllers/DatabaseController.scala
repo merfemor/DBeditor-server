@@ -29,12 +29,18 @@ class DatabaseController @Inject()(cc: ControllerComponents,
     Ok(databases.size().toString)
   }
 
+
   def usersOfDatabase(databaseId: Long) = Action { implicit request: Request[AnyContent] =>
 
     val users = databaseRepository.usersOf(databaseId)
     val user = users.get(0)
     Logger.debug(user.username)
-
     Ok(users.size().toString)
+  }
+
+
+  def deleteDatabase(databaseId: Long) = Action { implicit request: Request[AnyContent] =>
+    databaseRepository.findById(databaseId).delete()
+    Ok("uraaaa")
   }
 }
