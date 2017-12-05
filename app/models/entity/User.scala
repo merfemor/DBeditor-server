@@ -21,5 +21,5 @@ class User extends BaseModel {
   var password: String = _
 
   @OneToMany(cascade = Array(CascadeType.ALL), mappedBy = "creator", fetch = FetchType.LAZY)
-  var databases: util.List[Database] = new util.LinkedList[Database]
+  var createdDatabases: util.List[Database] = new util.LinkedList[Database]
 }
