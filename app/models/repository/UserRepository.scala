@@ -22,7 +22,7 @@ class UserRepository @Inject()(override protected val ebeanConfig: EbeanConfig)
     ebeanServer.find(classOf[User])
       .setFirstRow(page * pageSize)
       .setMaxRows(pageSize)
-      .where()
+      .where
       .like("username", query + "%")
       .findPagedList
       .getList
@@ -36,8 +36,8 @@ class UserRepository @Inject()(override protected val ebeanConfig: EbeanConfig)
   def getUnverifiedInfo(code: String): Option[UnverifiedUserInfo] =
     Option(
       ebeanServer.find(classOf[UnverifiedUserInfo])
-        .where()
+        .where
         .eq("verificationCode", code)
-        .findOne()
+        .findOne
     )
 }

@@ -7,21 +7,23 @@ import io.ebean.Ebean
 import models.entity.{Right, UserRight}
 import play.db.ebean.EbeanConfig
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 class UserRightRepository @Inject()(override protected val ebeanConfig: EbeanConfig)
   extends BaseRepository(ebeanConfig: EbeanConfig) {
 
-  def rightsIn(userId: Long, databaseId: Long) =
+  def rightsIn(userId: Long, databaseId: Long): Seq[Right] =
     ebeanServer.find(classOf[UserRight])
-      .where()
+      .where
       .eq("database_id", databaseId)
-      .where()
+      .where
       .eq("user_id", userId)
-      .findList()
-      .map(userRight => userRight.right)
+      .findList
+      .asScala
+      .map(_.right)
 
 
+  // TODO: catch exception and make return type Option[String]
   def grantRight(userId: Long, databaseId: Long, right: Right): Unit = {
     val newRight = new UserRight(userId, databaseId)
     newRight.right = right
