@@ -55,7 +55,11 @@ class UserController @Inject()(cc: ControllerComponents,
 
       val info1 = userRepository.getUnverifiedInfo(info.get.verificationCode)
       Logger.debug(info1.get.verificationCode)
+
+      val profileInfo = userRepository.getProfileInfo(info.get.user.id)
+      profileInfo.map(info => info.toString).foreach(i => Logger.debug(i))
     }
+
     Ok(views.html.main())
   }
 }

@@ -2,7 +2,7 @@ package models.repository
 
 import javax.inject.Inject
 
-import models.entity.{UnverifiedUserInfo, User}
+import models.entity.{UnverifiedUserInfo, User, UserProfileInfo}
 import play.db.ebean.EbeanConfig
 
 import scala.collection.JavaConverters._
@@ -18,7 +18,8 @@ class UserRepository @Inject()(override protected val ebeanConfig: EbeanConfig)
       .getList
       .asScala
 
-  def search(query: String, page: Int, pageSize: Int): Seq[User] = {
+
+  def search(query: String, page: Int, pageSize: Int): Seq[User] =
     ebeanServer.find(classOf[User])
       .setFirstRow(page * pageSize)
       .setMaxRows(pageSize)
@@ -27,7 +28,7 @@ class UserRepository @Inject()(override protected val ebeanConfig: EbeanConfig)
       .findPagedList
       .getList
       .asScala
-  }
+
 
   def getUnverifiedInfo(userId: Long): Option[UnverifiedUserInfo] =
     Option(ebeanServer.find(classOf[UnverifiedUserInfo], userId))
@@ -40,4 +41,8 @@ class UserRepository @Inject()(override protected val ebeanConfig: EbeanConfig)
         .eq("verificationCode", code)
         .findOne
     )
+
+
+  def getProfileInfo(userId: Long): Option[UserProfileInfo] =
+    Option(ebeanServer.find(classOf[UserProfileInfo], userId))
 }
