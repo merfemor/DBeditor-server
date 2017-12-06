@@ -1,6 +1,5 @@
 package models.repository
 
-import java.util
 import javax.inject.Inject
 
 import models.entity.User
@@ -11,12 +10,13 @@ import scala.collection.JavaConverters._
 class UserRepository @Inject()(override protected val ebeanConfig: EbeanConfig)
   extends IdEntityRepository[User](ebeanConfig: EbeanConfig) {
 
-  def all(page: Int, pageSize: Int): util.List[User] =
+  def all(page: Int, pageSize: Int): Seq[User] =
     ebeanServer.find(classOf[User])
       .setFirstRow(page * pageSize)
       .setMaxRows(pageSize)
       .findPagedList
       .getList
+      .asScala
 
   def search(query: String, page: Int, pageSize: Int): Seq[User] = {
     ebeanServer.find(classOf[User])

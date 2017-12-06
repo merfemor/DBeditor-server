@@ -17,14 +17,16 @@ class UserController @Inject()(cc: ControllerComponents,
   def list() = Action { implicit request: Request[AnyContent] =>
     val users = userRepository.all(0, 1)
 
-    val firstUser = users.get(0)
+    val firstUser = users.head
     Logger.debug("1 id = " + firstUser.id)
 
     val copyUser = userRepository.findById(firstUser.id)
-    Logger.debug("2 id = " + copyUser.id)
 
-    Logger.debug((copyUser == firstUser).toString)
+    if (copyUser.isDefined) {
+      Logger.debug("2 id = " + copyUser.get.id)
 
+      Logger.debug((copyUser.get == firstUser).toString)
+    }
     Ok(views.html.main())
   }
 

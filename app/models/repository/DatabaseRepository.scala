@@ -1,42 +1,48 @@
 package models.repository
 
-import java.util
 import javax.inject.Inject
 
 import io.ebean.Expr
 import models.entity.{Database, User}
 import play.db.ebean.EbeanConfig
 
+import scala.collection.JavaConverters._
+
 
 class DatabaseRepository @Inject()(override protected val ebeanConfig: EbeanConfig)
   extends IdEntityRepository[Database](ebeanConfig: EbeanConfig) {
 
-  def createdBy(creatorId: Long): util.List[Database] =
+  def createdBy(creatorId: Long): Seq[Database] =
     ebeanServer.find(classOf[Database])
-      .where()
+      .where
       .eq("creator_id", creatorId)
-      .findList()
+      .findList
+      .asScala
 
 
-  def managedOrCreatedBy(userId: Long): util.List[Database] =
+  def managedOrCreatedBy(userId: Long): Seq[Database] =
     ebeanServer.find(classOf[Database])
-      .where()
+      .where
       .or(
         Expr.eq("userRights.userRightId.userId", userId),
         Expr.eq("creator_id", userId)
-      ).findList()
+      )
+      .findList
+      .asScala
 
 
-  def managedBy(userId: Long): util.List[Database] =
+  def managedBy(userId: Long): Seq[Database] =
     ebeanServer.find(classOf[Database])
-      .where()
+      .where
       .eq("userRights.userRightId.userId", userId)
-      .findList()
+      .findList
+      .asScala
 
 
-  def usersOf(databaseId: Long): util.List[User] =
+  def usersOf(databaseId: Long): Seq[User] =
     ebeanServer.find(classOf[User])
-      .where()
+      .where
       .eq("userRights.userRightId.databaseId", databaseId)
-      .findList()
+      .findList
+      .asScala
 }
