@@ -2,7 +2,7 @@ package models.repository
 
 import javax.inject.Inject
 
-import models.entity.User
+import models.entity.{UnverifiedUserInfo, User}
 import play.db.ebean.EbeanConfig
 
 import scala.collection.JavaConverters._
@@ -28,4 +28,16 @@ class UserRepository @Inject()(override protected val ebeanConfig: EbeanConfig)
       .getList
       .asScala
   }
+
+  def getUnverifiedInfo(userId: Long): Option[UnverifiedUserInfo] =
+    Option(ebeanServer.find(classOf[UnverifiedUserInfo], userId))
+
+
+  def getUnverifiedInfo(code: String): Option[UnverifiedUserInfo] =
+    Option(
+      ebeanServer.find(classOf[UnverifiedUserInfo])
+        .where()
+        .eq("verificationCode", code)
+        .findOne()
+    )
 }

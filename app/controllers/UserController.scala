@@ -46,4 +46,16 @@ class UserController @Inject()(cc: ControllerComponents,
     else
       Ok("[]")
   }
+
+
+  def verify() = Action { implicit request: Request[AnyContent] =>
+    val info = userRepository.getUnverifiedInfo(1)
+    if (info.isDefined) {
+      Logger.debug(info.get.verificationCode)
+
+      val info1 = userRepository.getUnverifiedInfo(info.get.verificationCode)
+      Logger.debug(info1.get.verificationCode)
+    }
+    Ok(views.html.main())
+  }
 }
