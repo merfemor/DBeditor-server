@@ -15,7 +15,7 @@ class UserController @Inject()(cc: ControllerComponents,
 
 
   def list() = Action { implicit request: Request[AnyContent] =>
-    val users = userRepository.page(0, 1)
+    val users = userRepository.all(0, 1)
 
     val firstUser = users.get(0)
     Logger.debug("1 id = " + firstUser.id)
@@ -32,5 +32,16 @@ class UserController @Inject()(cc: ControllerComponents,
   def databaseUserInfo(userId: Long, databaseId: Long) = Action { implicit request: Request[AnyContent] =>
     val rights = userRightsRepository.rightsIn(userId, databaseId)
     Ok(rights.head.toString)
+  }
+
+
+  def search() = Action { implicit request: Request[AnyContent] =>
+    val query = "test"
+    val users = userRepository.search(query, 0, 3)
+    val user = users.headOption
+    if (user.isDefined)
+      Ok(user.get.username)
+    else
+      Ok("[]")
   }
 }
