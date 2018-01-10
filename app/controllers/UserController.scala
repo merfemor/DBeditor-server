@@ -2,8 +2,9 @@ package controllers
 
 import javax.inject._
 
+import auth.UserAction
 import models.repository._
-import play.Logger
+import play.api.Logger
 import play.api.mvc._
 
 
@@ -12,6 +13,8 @@ class UserController @Inject()(cc: ControllerComponents,
                                userRepository: UserRepository,
                                userRightsRepository: UserRightRepository)
   extends AbstractController(cc) {
+
+  private val logger = Logger(getClass)
 
 
   def list() = Action { implicit request: Request[AnyContent] =>
@@ -58,4 +61,15 @@ class UserController @Inject()(cc: ControllerComponents,
     }
     Ok(views.html.main())
   }
+
+  def currentUserInfo() = UserAction {
+    Action { userRequest =>
+      Ok("Hi, " + userRequest.cookies.get("session_user_id"))
+    }
+  }
 }
+
+// TODO: 1. Make "no security cookies filter"
+// TODO: 2. Implement json write of user
+// TODO: 3. Logging authomatization
+// TODO: 4. Implement currentUserInfo

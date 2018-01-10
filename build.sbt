@@ -7,6 +7,8 @@ lazy val root = (project in file(".")).enablePlugins(PlayScala, PlayEbean)
 
 scalaVersion := "2.12.3"
 
-libraryDependencies += guice
-libraryDependencies += jdbc
-libraryDependencies += "org.postgresql" % "postgresql" % "9.4.1211"
+libraryDependencies ++= Seq(
+  guice,
+  jdbc,
+  "org.postgresql" % "postgresql" % "9.4.1211"
+)

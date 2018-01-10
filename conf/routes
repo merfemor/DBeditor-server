@@ -1,11 +1,11 @@
-GET        /                                      controllers.HomeController.index
-GET        /users                                 controllers.UserController.list
-GET        /users/search                          controllers.UserController.search
-GET        /user/:id/databases                    controllers.DatabaseController.databasesOfUser(id: Long)
-GET        /database/:id/users                    controllers.DatabaseController.usersOfDatabase(id: Long)
-GET        /database/:did/user/:uid               controllers.UserController.databaseUserInfo(uid: Long, did: Long)
-GET        /verify                                controllers.UserController.verify()
-GET        /database/:did/user/:uid/grant         controllers.UserRightController.grantRight(uid: Long, did: Long)
-GET        /database/:did/user/:uid/revoke        controllers.UserRightController.revokeRight(uid: Long, did: Long)
-GET        /database/:id/delete                   controllers.DatabaseController.deleteDatabase(id: Long)
-GET        /assets/*file                          controllers.Assets.versioned(path="/public", file: Asset)
+GET        /                    controllers.HomeController.index
+GET        /user                controllers.UserController.currentUserInfo
+#GET        /users/search                          controllers.UserController.search
+#GET        /user/:id/databases                    controllers.DatabaseController.databasesOfUser(id: Long)
+#GET        /database/:id/users                    controllers.DatabaseController.usersOfDatabase(id: Long)
+#GET        /database/:did/user/:uid               controllers.UserController.databaseUserInfo(uid: Long, did: Long)
+#GET        /verify                                controllers.UserController.verify()
+#GET        /database/:did/user/:uid/grant         controllers.UserRightController.grantRight(uid: Long, did: Long)
+#GET        /database/:did/user/:uid/revoke        controllers.UserRightController.revokeRight(uid: Long, did: Long)
+#GET        /database/:id/delete                   controllers.DatabaseController.deleteDatabase(id: Long)
+GET        /assets/*file        controllers.Assets.versioned(path="/public", file: Asset)
