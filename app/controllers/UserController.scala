@@ -2,7 +2,7 @@ package controllers
 
 import javax.inject._
 
-import auth.UserAction
+import auth.{UserAction, UserRequest}
 import models.repository._
 import play.api.Logger
 import play.api.mvc._
@@ -11,7 +11,9 @@ import play.api.mvc._
 @Singleton
 class UserController @Inject()(cc: ControllerComponents,
                                userRepository: UserRepository,
-                               userRightsRepository: UserRightRepository)
+                               userRightsRepository: UserRightRepository,
+                               UserAction: UserAction
+                              )
   extends AbstractController(cc) {
 
   private val logger = Logger(getClass)
@@ -62,10 +64,8 @@ class UserController @Inject()(cc: ControllerComponents,
     Ok(views.html.main())
   }
 
-  def currentUserInfo() = UserAction {
-    Action { userRequest =>
-      Ok("Hi, " + userRequest.cookies.get("session_user_id"))
-    }
+  def currentUserInfo() = UserAction { userRequest: UserRequest[AnyContent] =>
+    Ok("Hi, " + userRequest.user.username)
   }
 }
 
