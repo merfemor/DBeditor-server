@@ -4,6 +4,7 @@ import java.util
 import javax.persistence._
 
 import io.ebean.annotation.NotNull
+import play.api.libs.json.{JsObject, JsResult, JsValue, Json, Reads, Writes}
 
 @Entity
 @Table(name = "\"user\"")
@@ -26,4 +27,14 @@ class User extends BaseModel {
   @OneToMany(mappedBy = "user", cascade = Array(CascadeType.ALL))
   @PrimaryKeyJoinColumn
   private var userRights: util.List[UserRight] = _
+}
+
+object User {
+  implicit val userWrites = new Writes[User] {
+    def writes(user: User): JsObject = Json.obj(
+      "id" -> user.id,
+      "username" -> user.username,
+      "email" -> user.email
+    )
+  }
 }

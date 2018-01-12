@@ -5,6 +5,7 @@ import javax.inject._
 import auth.{UserAction, UserRequest}
 import models.repository._
 import play.api.Logger
+import play.api.libs.json.Json
 import play.api.mvc._
 
 
@@ -65,11 +66,6 @@ class UserController @Inject()(cc: ControllerComponents,
   }
 
   def currentUserInfo() = UserAction { userRequest: UserRequest[AnyContent] =>
-    Ok("Hi, " + userRequest.user.username)
+    Ok(Json.toJson(userRequest.user))
   }
 }
-
-// TODO: 1. Make "no security cookies filter"
-// TODO: 2. Implement json write of user
-// TODO: 3. Logging authomatization
-// TODO: 4. Implement currentUserInfo
