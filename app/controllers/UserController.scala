@@ -3,9 +3,11 @@ package controllers
 import javax.inject._
 
 import auth.{UserAction, UserRequest}
+import models.entity.User
 import models.repository._
 import play.api.Logger
-import play.api.libs.json.Json
+import play.api.data.Form
+import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc._
 
 
@@ -16,6 +18,7 @@ class UserController @Inject()(cc: ControllerComponents,
                                UserAction: UserAction
                               )
   extends AbstractController(cc) {
+
 
   private val logger = Logger(getClass)
 
@@ -67,5 +70,16 @@ class UserController @Inject()(cc: ControllerComponents,
 
   def currentUserInfo() = UserAction { userRequest: UserRequest[AnyContent] =>
     Ok(Json.toJson(userRequest.user))
+  }
+
+  // TODO: hash passwords with this https://stackoverflow.com/questions/18262425/how-to-hash-password-in-play-framework-maybe-with-bcrypt
+  def register() = Action(parse.json) { request: Request[JsValue] =>
+    request.body.validate[User] match {
+      case u: JsSuccess[User] =>
+        val user = u.get
+        user.save()
+        Ok(Json.toJson(user))
+      case e: JsError => BadRequest("Error during JSON validation")
+    }
   }
 }

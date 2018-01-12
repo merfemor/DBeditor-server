@@ -1,5 +1,7 @@
 GET        /                    controllers.HomeController.index
 GET        /user                controllers.UserController.currentUserInfo
+POST       /user                controllers.UserController.register
+
 #GET        /users/search                          controllers.UserController.search
 #GET        /user/:id/databases                    controllers.DatabaseController.databasesOfUser(id: Long)
 #GET        /database/:id/users                    controllers.DatabaseController.usersOfDatabase(id: Long)
