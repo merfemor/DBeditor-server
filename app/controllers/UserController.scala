@@ -47,17 +47,6 @@ class UserController @Inject()(cc: ControllerComponents,
   }
 
 
-  def search() = Action { implicit request: Request[AnyContent] =>
-    val query = "test"
-    val users = userRepository.search(query, 0, 3)
-    val user = users.headOption
-    if (user.isDefined)
-      Ok(user.get.username)
-    else
-      Ok("[]")
-  }
-
-
   def verify() = Action { implicit request: Request[AnyContent] =>
     val info = userRepository.getUnverifiedInfo(1)
     if (info.isDefined) {
@@ -93,6 +82,14 @@ class UserController @Inject()(cc: ControllerComponents,
       u => Ok(Json.toJson[User](u))
     ) getOrElse {
       NotFound(s"No user with id = $id")
+    }
+  }
+
+  def search(query: Option[String], page: Int, pageSize: Int) = UserAction {
+    query.map { query =>
+      Ok(Json.toJson(userRepository.search(query, page, pageSize)))
+    } getOrElse {
+      Ok(Json.toJson(userRepository.all(page, pageSize)))
     }
   }
 }

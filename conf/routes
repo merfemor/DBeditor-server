@@ -2,11 +2,13 @@ GET         /assets/*file         controllers.Assets.versioned(path="/public", f
 
 # welcome page
 GET         /                     controllers.HomeController.index
+
 GET         /user                 controllers.UserController.currentUserInfo
-GET         /user/$id<\d+>        controllers.UserController.userInfo(id: Long)
 POST        /user                 controllers.UserController.register
 
-#GET        /users/search                          controllers.UserController.search
+GET         /user/$id<\d+>        controllers.UserController.userInfo(id: Long)
+GET         /users/search         controllers.UserController.search(query: Option[String], page: Int ?= 0, page_size: Int ?= 20)
+
 #GET        /user/:id/databases                    controllers.DatabaseController.databasesOfUser(id: Long)
 #GET        /database/:id/users                    controllers.DatabaseController.usersOfDatabase(id: Long)
 #GET        /database/:did/user/:uid               controllers.UserController.databaseUserInfo(uid: Long, did: Long)
