@@ -11,6 +11,8 @@ import play.api.data.Form
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc._
 
+import scala.util.Try
+
 
 @Singleton
 class UserController @Inject()(cc: ControllerComponents,
@@ -20,25 +22,7 @@ class UserController @Inject()(cc: ControllerComponents,
                               )
   extends AbstractController(cc) {
 
-
   private val logger = Logger(getClass)
-
-
-  def list() = Action { implicit request: Request[AnyContent] =>
-    val users = userRepository.all(0, 1)
-
-    val firstUser = users.head
-    Logger.debug("1 id = " + firstUser.id)
-
-    val copyUser = userRepository.findById(firstUser.id)
-
-    if (copyUser.isDefined) {
-      Logger.debug("2 id = " + copyUser.get.id)
-
-      Logger.debug((copyUser.get == firstUser).toString)
-    }
-    Ok(views.html.main())
-  }
 
 
   def databaseUserInfo(userId: Long, databaseId: Long) = Action { implicit request: Request[AnyContent] =>
@@ -62,18 +46,15 @@ class UserController @Inject()(cc: ControllerComponents,
     Ok(Json.toJson(userRequest.user))
   }
 
-  def register() = Action(parse.json) { request: Request[JsValue] =>
-    request.body.validate[User] match {
-      case u: JsSuccess[User] =>
-        val user = u.get
-        try {
-          user.save()
-          Ok(Json.toJson(user))
-        } catch {
-          case e: DuplicateKeyException =>
-            BadRequest(e.getMessage)
-        }
-      case e: JsError => BadRequest("Error during JSON validation")
+  def register() = Action(parse.json[User]) { request: Request[User] =>
+    val user = request.body
+    try {
+      user.save()
+      // TODO: create verify info and send email
+      Ok(Json.toJson(user))
+    } catch {
+      case e: DuplicateKeyException =>
+        BadRequest(e.getMessage)
     }
   }
 
@@ -90,6 +71,35 @@ class UserController @Inject()(cc: ControllerComponents,
       Ok(Json.toJson(userRepository.search(query, page, pageSize)))
     } getOrElse {
       Ok(Json.toJson(userRepository.all(page, pageSize)))
+    }
+  }
+
+  def updateUserProfileInfo() = UserAction(parse.json[User](User.userReadsOptionFields)) { request: UserRequest[User] =>
+    val newUser = request.body
+    val curUser = request.user
+    var somethingChanged = false
+
+    if (newUser.username.nonEmpty) {
+      somethingChanged = true
+      curUser.username = newUser.username
+    }
+    if (newUser.password.nonEmpty) {
+      somethingChanged = true
+      curUser.password = newUser.password
+    }
+    if (newUser.email.nonEmpty) {
+      somethingChanged = true
+      curUser.email = newUser.email
+      // TODO: update verify info and resend email
+    }
+    try {
+      if (somethingChanged) {
+        curUser.save()
+      }
+      Ok(Json.toJson(curUser))
+    } catch {
+      case e: DuplicateKeyException =>
+        BadRequest(e.getMessage)
     }
   }
 }

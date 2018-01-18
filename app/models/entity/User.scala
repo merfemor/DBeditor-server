@@ -64,4 +64,10 @@ object User {
       (JsPath \ "email").read[String](email) and
       (JsPath \ "password").read[String](minLength[String](1))
     ) (create _)
+
+  val userReadsOptionFields: Reads[User] = (
+    (JsPath \ "username").readWithDefault[String]("")(minLength[String](1)) and
+      (JsPath \ "email").readWithDefault[String]("")(email) and
+      (JsPath \ "password").readWithDefault[String]("")(minLength[String](1))
+    ) (create _)
 }
