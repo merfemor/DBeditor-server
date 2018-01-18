@@ -87,4 +87,12 @@ class UserController @Inject()(cc: ControllerComponents,
       case e: JsError => BadRequest("Error during JSON validation")
     }
   }
+
+  def userInfo(id: Long) = UserAction {
+    userRepository.findById(id).map(
+      u => Ok(Json.toJson[User](u))
+    ) getOrElse {
+      NotFound(s"No user with id = $id")
+    }
+  }
 }

@@ -1,6 +1,10 @@
-GET        /                    controllers.HomeController.index
-GET        /user                controllers.UserController.currentUserInfo
-POST       /user                controllers.UserController.register
+GET         /assets/*file         controllers.Assets.versioned(path="/public", file: Asset)
+
+# welcome page
+GET         /                     controllers.HomeController.index
+GET         /user                 controllers.UserController.currentUserInfo
+GET         /user/$id<\d+>        controllers.UserController.userInfo(id: Long)
+POST        /user                 controllers.UserController.register
 
 #GET        /users/search                          controllers.UserController.search
 #GET        /user/:id/databases                    controllers.DatabaseController.databasesOfUser(id: Long)
@@ -10,4 +14,3 @@ POST       /user                controllers.UserController.register
 #GET        /database/:did/user/:uid/grant         controllers.UserRightController.grantRight(uid: Long, did: Long)
 #GET        /database/:did/user/:uid/revoke        controllers.UserRightController.revokeRight(uid: Long, did: Long)
 #GET        /database/:id/delete                   controllers.DatabaseController.deleteDatabase(id: Long)
-GET        /assets/*file        controllers.Assets.versioned(path="/public", file: Asset)
