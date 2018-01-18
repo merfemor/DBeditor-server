@@ -2,16 +2,27 @@ package controllers
 
 import javax.inject._
 
+import auth.{UserAction, UserRequest}
+import models.entity.Database
 import models.repository._
 import play.Logger
+import play.api.libs.json.Json
 import play.api.mvc._
 
 
 @Singleton
 class DatabaseController @Inject()(cc: ControllerComponents,
-                                   databaseRepository: DatabaseRepository)
+                                   databaseRepository: DatabaseRepository,
+                                   UserAction: UserAction)
   extends AbstractController(cc) {
 
+
+  def createDatabaseConnection() = UserAction(parse.json[Database]) { request: UserRequest[Database] =>
+    val db = request.body
+    db.creator = request.user
+    db.save()
+    Ok(Json.toJson(db))
+  }
 
   def databasesOfUser(id: Long) = Action { implicit request: Request[AnyContent] =>
     val databases = databaseRepository.createdBy(id)
