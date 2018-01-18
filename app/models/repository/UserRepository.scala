@@ -40,4 +40,12 @@ class UserRepository @Inject()(override protected val ebeanConfig: EbeanConfig)
         .eq("verificationCode", code)
         .findOne
     )
+
+  def findByUsername(username: String): Option[User] =
+    Option(
+      ebeanServer.find(classOf[User])
+        .where
+        .eq("username", username)
+        .findUnique
+    )
 }
