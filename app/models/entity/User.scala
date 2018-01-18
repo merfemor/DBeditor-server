@@ -12,10 +12,12 @@ import play.api.libs.json.{JsObject, JsPath, JsResult, JsValue, Json, Reads, Wri
 class User extends BaseModel {
   @NotNull
   @Lob
+  @Column(unique = true)
   var username: String = _
 
   @NotNull
   @Lob
+  @Column(unique = true)
   var email: String = _
 
   @NotNull

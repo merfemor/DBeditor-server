@@ -3,6 +3,7 @@ package controllers
 import javax.inject._
 
 import auth.{UserAction, UserRequest}
+import io.ebean.DuplicateKeyException
 import models.entity.User
 import models.repository._
 import play.api.Logger
@@ -72,13 +73,17 @@ class UserController @Inject()(cc: ControllerComponents,
     Ok(Json.toJson(userRequest.user))
   }
 
-  // TODO: hash passwords with this https://stackoverflow.com/questions/18262425/how-to-hash-password-in-play-framework-maybe-with-bcrypt
   def register() = Action(parse.json) { request: Request[JsValue] =>
     request.body.validate[User] match {
       case u: JsSuccess[User] =>
         val user = u.get
-        user.save()
-        Ok(Json.toJson(user))
+        try {
+          user.save()
+          Ok(Json.toJson(user))
+        } catch {
+          case e: DuplicateKeyException =>
+            BadRequest(e.getMessage)
+        }
       case e: JsError => BadRequest("Error during JSON validation")
     }
   }
