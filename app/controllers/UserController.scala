@@ -7,11 +7,8 @@ import io.ebean.DuplicateKeyException
 import models.entity.User
 import models.repository._
 import play.api.Logger
-import play.api.data.Form
-import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
+import play.api.libs.json.Json
 import play.api.mvc._
-
-import scala.util.Try
 
 
 @Singleton
@@ -101,5 +98,11 @@ class UserController @Inject()(cc: ControllerComponents,
       case e: DuplicateKeyException =>
         BadRequest(e.getMessage)
     }
+  }
+
+  def deleteCurrentUser() = UserAction { request: UserRequest[AnyContent] =>
+    val user = request.user
+    user.delete()
+    Ok(Json.toJson(user))
   }
 }
