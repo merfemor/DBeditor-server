@@ -2,18 +2,21 @@ package controllers
 
 import javax.inject._
 
-import auth.{UserAction, UserRequest}
+import auth.{ConnectionCreatorAction, ConnectionCreatorRequest, UserAction, UserRequest}
 import models.entity.Database
 import models.repository._
 import play.Logger
-import play.api.libs.json.Json
+import play.api.libs.json._
 import play.api.mvc._
+
+import scala.collection.JavaConverters._
 
 
 @Singleton
 class DatabaseController @Inject()(cc: ControllerComponents,
                                    databaseRepository: DatabaseRepository,
-                                   UserAction: UserAction)
+                                   UserAction: UserAction,
+                                   ConnectionCreatorAction: ConnectionCreatorAction)
   extends AbstractController(cc) {
 
 
@@ -24,20 +27,40 @@ class DatabaseController @Inject()(cc: ControllerComponents,
     Ok(Json.toJson(db))
   }
 
-  def databasesOfUser(id: Long) = Action { implicit request: Request[AnyContent] =>
-    val databases = databaseRepository.createdBy(id)
-    val database = databases.head
-    Logger.debug(database.url)
+  def connectionsCreatedByCurrentUser() = UserAction { request: UserRequest[AnyContent] =>
+    Ok(Json.toJson(request.user.createdDatabases.asScala))
+  }
 
-    val memberDatabases = databaseRepository.managedBy(id)
-    val memberDatabase = memberDatabases.head
-    Logger.debug(memberDatabase.url)
+  def deleteConnection(id: Long) = UserAction {
+    ConnectionCreatorAction(id) { request: ConnectionCreatorRequest[AnyContent] =>
+      request.dbConnection.delete()
+      Ok(Json.toJson(request.dbConnection))
+    }
+  }
 
-    val memberCDatabases = databaseRepository.managedOrCreatedBy(id)
-    val memberCDatabase = memberCDatabases.head
-    Logger.debug(memberCDatabase.url)
 
-    Ok(databases.length.toString)
+  def updateDatabaseConnectionInfo(id: Long) = UserAction(parse.json) {
+    ConnectionCreatorAction(id) { request: ConnectionCreatorRequest[JsValue] =>
+      val oldDb = request.dbConnection
+      request.body.validate(Database.databaseReadsOptionFields(oldDb.dbms)) match {
+        case j: JsSuccess[Database] =>
+          val newDb = j.get
+          var changed = false
+
+          if (newDb.url.nonEmpty && newDb.url != oldDb.url) {
+            changed = true
+            oldDb.url = newDb.url
+          }
+          if (newDb.dbms != oldDb.dbms) {
+            changed = true
+            oldDb.dbms = newDb.dbms
+          }
+          oldDb.save()
+          Ok(Json.toJson(oldDb))
+
+        case e: JsError => BadRequest("Failed to parse JSON value")
+      }
+    }
   }
 
 
