@@ -53,19 +53,19 @@ object User {
     def writes(user: User): JsObject = Json.obj(
       "id" -> user.id,
       "username" -> user.username,
-      "mail" -> user.email
+      "email" -> user.email
     )
   }
 
   implicit val userReads: Reads[User] = (
     (JsPath \ "username").read[String](minLength[String](1)) and
-      (JsPath \ "mail").read[String](email) and
+      (JsPath \ "email").read[String](email) and
       (JsPath \ "password").read[String](minLength[String](1))
     ) (create _)
 
   val userReadsOptionFields: Reads[User] = (
     (JsPath \ "username").readWithDefault[String]("")(minLength[String](1)) and
-      (JsPath \ "mail").readWithDefault[String]("")(email) and
+      (JsPath \ "email").readWithDefault[String]("")(email) and
       (JsPath \ "password").readWithDefault[String]("")(minLength[String](1))
     ) (create _)
 }
