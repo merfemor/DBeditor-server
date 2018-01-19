@@ -4,6 +4,7 @@ import javax.inject._
 
 import auth.{UserAction, UserRequest}
 import io.ebean.DuplicateKeyException
+import mail.{EmailConsumer, RabbitMQConfig}
 import models.entity.User
 import models.repository._
 import play.api.libs.json.Json
@@ -14,29 +15,24 @@ import play.api.mvc._
 class UserController @Inject()(cc: ControllerComponents,
                                userRepository: UserRepository,
                                userRightsRepository: UserRightRepository,
-                               UserAction: UserAction
+                               UserAction: UserAction,
+                               rabbitMqConfig: RabbitMQConfig
                               )
   extends AbstractController(cc) {
 
-  /*private val logger = Logger(getClass)
+  val emailReceiver: EmailConsumer = EmailConsumer(rabbitMqConfig)
 
+  /*
+    def verify() = Action { implicit request: Request[AnyContent] =>
+      val info = userRepository.getUnverifiedInfo(1)
+      if (info.isDefined) {
+        Logger.debug(info.get.verificationCode)
 
-  def databaseUserInfo(userId: Long, databaseId: Long) = Action { implicit request: Request[AnyContent] =>
-    val rights = userRightsRepository.rightsIn(userId, databaseId)
-    Ok(rights.head.toString)
-  }
-
-
-  def verify() = Action { implicit request: Request[AnyContent] =>
-    val info = userRepository.getUnverifiedInfo(1)
-    if (info.isDefined) {
-      Logger.debug(info.get.verificationCode)
-
-      val info1 = userRepository.getUnverifiedInfo(info.get.verificationCode)
-      Logger.debug(info1.get.verificationCode)
-    }
-    Ok(views.html.main())
-  }*/
+        val info1 = userRepository.getUnverifiedInfo(info.get.verificationCode)
+        Logger.debug(info1.get.verificationCode)
+      }
+      Ok(views.html.main())
+    }*/
 
 
   def currentUserInfo() = UserAction { userRequest: UserRequest[AnyContent] =>

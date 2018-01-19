@@ -3,9 +3,7 @@ package models.entity
 import java.util
 import javax.persistence._
 
-
 import io.ebean.annotation.NotNull
-import play.api.libs.json.{JsObject, JsPath, JsResult, JsValue, Json, Reads, Writes}
 
 @Entity
 @Table(name = "\"user\"")
@@ -47,27 +45,27 @@ object User {
   }
 
   import play.api.libs.functional.syntax._
-  import play.api.libs.json._
   import play.api.libs.json.Reads._
+  import play.api.libs.json._
 
 
   implicit val userWrites = new Writes[User] {
     def writes(user: User): JsObject = Json.obj(
       "id" -> user.id,
       "username" -> user.username,
-      "email" -> user.email
+      "mail" -> user.email
     )
   }
 
   implicit val userReads: Reads[User] = (
     (JsPath \ "username").read[String](minLength[String](1)) and
-      (JsPath \ "email").read[String](email) and
+      (JsPath \ "mail").read[String](email) and
       (JsPath \ "password").read[String](minLength[String](1))
     ) (create _)
 
   val userReadsOptionFields: Reads[User] = (
     (JsPath \ "username").readWithDefault[String]("")(minLength[String](1)) and
-      (JsPath \ "email").readWithDefault[String]("")(email) and
+      (JsPath \ "mail").readWithDefault[String]("")(email) and
       (JsPath \ "password").readWithDefault[String]("")(minLength[String](1))
     ) (create _)
 }
