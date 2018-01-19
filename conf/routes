@@ -23,10 +23,6 @@ PATCH         /connection/$id<\d+>        controllers.DatabaseController.updateD
 + nocsrf
 DELETE        /connection/$id<\d+>        controllers.DatabaseController.deleteConnection(id: Long)
 
-#GET        /user/:id/databases                    controllers.DatabaseController.databasesOfUser(id: Long)
-#GET        /database/:id/users                    controllers.DatabaseController.usersOfDatabase(id: Long)
-#GET        /database/:did/user/:uid               controllers.UserController.databaseUserInfo(uid: Long, did: Long)
-#GET        /verify                                controllers.UserController.verify()
-#GET        /database/:did/user/:uid/grant         controllers.UserRightController.grantRight(uid: Long, did: Long)
-#GET        /database/:did/user/:uid/revoke        controllers.UserRightController.revokeRight(uid: Long, did: Long)
-#GET        /database/:id/delete                   controllers.DatabaseController.deleteDatabase(id: Long)
+# database users management
++ nocsrf
+POST          /connection/right           controllers.UserRightController.grantRight

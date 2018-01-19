@@ -5,7 +5,6 @@ import javax.inject._
 import auth.{ConnectionCreatorAction, ConnectionCreatorRequest, UserAction, UserRequest}
 import models.entity.Database
 import models.repository._
-import play.Logger
 import play.api.libs.json._
 import play.api.mvc._
 
@@ -38,7 +37,6 @@ class DatabaseController @Inject()(cc: ControllerComponents,
     }
   }
 
-
   def updateDatabaseConnectionInfo(id: Long) = UserAction(parse.json) {
     ConnectionCreatorAction(id) { request: ConnectionCreatorRequest[JsValue] =>
       val oldDb = request.dbConnection
@@ -60,26 +58,6 @@ class DatabaseController @Inject()(cc: ControllerComponents,
 
         case e: JsError => BadRequest("Failed to parse JSON value")
       }
-    }
-  }
-
-
-  def usersOfDatabase(databaseId: Long) = Action { implicit request: Request[AnyContent] =>
-
-    val users = databaseRepository.usersOf(databaseId)
-    val user = users.head
-    Logger.debug(user.username)
-    Ok(users.length.toString)
-  }
-
-
-  def deleteDatabase(databaseId: Long) = Action { implicit request: Request[AnyContent] =>
-    val database = databaseRepository.findById(databaseId)
-    if (database.isDefined) {
-      database.get.delete()
-      Ok("uraaaa, deleted")
-    } else {
-      Ok("not found")
     }
   }
 }

@@ -5,6 +5,8 @@ import javax.persistence._
 import io.ebean.Model
 import io.ebean.annotation.NotNull
 
+import scala.util.Try
+
 @Embeddable
 protected class UserRightId {
   var userId: Long = _
@@ -57,7 +59,43 @@ class UserRight extends Model {
     userRightId.databaseId = databaseId
   }
 
+  def this(userId: Long, databaseId: Long, right: Right) {
+    this(userId, databaseId)
+    this.right = right
+  }
+
   def right: Right = userRightId.right
 
   def right_=(r: Right): Unit = userRightId.right = r
+
+  def userId: Long = userRightId.userId
+
+  def databaseId: Long = userRightId.databaseId
+
+}
+
+object UserRight {
+
+  import play.api.libs.functional.syntax._
+  import play.api.libs.json.Reads._
+  import play.api.libs.json._
+
+  implicit val rightReads: Reads[Right] = JsPath.read[String]
+    .filter(JsonValidationError("No such right"))(s =>
+      Try.apply[Right](Right.valueOf(s)).toOption.isDefined
+    ).map(Right.valueOf)
+
+  implicit val userRightWrites = new Writes[UserRight] {
+    def writes(userRight: UserRight): JsObject = Json.obj(
+      "user_id" -> userRight.userId,
+      "database_id" -> userRight.databaseId,
+      "right" -> userRight.right.toString
+    )
+  }
+
+  implicit val userRightReads: Reads[UserRight] = (
+    (JsPath \ "user_id").read[Long] and
+      (JsPath \ "connection_id").read[Long] and
+      (JsPath \ "right").read[Right]
+    ) ((u, c, r) => new UserRight(u, c, r))
 }

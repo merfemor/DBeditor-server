@@ -6,7 +6,6 @@ import auth.{UserAction, UserRequest}
 import io.ebean.DuplicateKeyException
 import models.entity.User
 import models.repository._
-import play.api.Logger
 import play.api.libs.json.Json
 import play.api.mvc._
 
@@ -19,7 +18,7 @@ class UserController @Inject()(cc: ControllerComponents,
                               )
   extends AbstractController(cc) {
 
-  private val logger = Logger(getClass)
+  /*private val logger = Logger(getClass)
 
 
   def databaseUserInfo(userId: Long, databaseId: Long) = Action { implicit request: Request[AnyContent] =>
@@ -37,7 +36,8 @@ class UserController @Inject()(cc: ControllerComponents,
       Logger.debug(info1.get.verificationCode)
     }
     Ok(views.html.main())
-  }
+  }*/
+
 
   def currentUserInfo() = UserAction { userRequest: UserRequest[AnyContent] =>
     Ok(Json.toJson(userRequest.user))

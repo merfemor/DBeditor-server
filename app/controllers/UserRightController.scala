@@ -1,30 +1,35 @@
 package controllers
 
-import javax.inject._
+import javax.inject.{Inject, Singleton}
 
-import models.entity.Right
-import models.repository._
-import play.api.mvc._
-
+import auth.{ConnectionCreatorAction, ConnectionCreatorRequest, UserAction, UserRequest}
+import io.ebean.{DataIntegrityException, DuplicateKeyException}
+import models.entity.UserRight
+import play.api.libs.json.Json
+import play.api.mvc.{AbstractController, ControllerComponents}
 
 @Singleton
 class UserRightController @Inject()(cc: ControllerComponents,
-                                    userRepository: UserRepository,
-                                    userRightsRepository: UserRightRepository)
+                                    UserAction: UserAction,
+                                    ConnectionCreatorAction: ConnectionCreatorAction)
   extends AbstractController(cc) {
 
-  def grantRight(userId: Long, databaseId: Long) = Action { implicit request: Request[AnyContent] =>
-    userRightsRepository.grantRight(userId, databaseId, Right.READ_ONLY)
-    Ok("Sample tet")
-  }
-
-  def revokeRight(userId: Long, databaseId: Long) = Action { implicit request: Request[AnyContent] =>
-    val right = userRightsRepository.findRight(userId, databaseId, Right.READ_ONLY)
-    if (right.isDefined) {
-      right.get.delete()
-      Ok("revoked")
-    } else {
-      Ok("not found")
+  def grantRight = UserAction(parse.json[UserRight]) { userRequest: UserRequest[UserRight] =>
+    val right = userRequest.body
+    ConnectionCreatorAction(userRequest, right.databaseId) { request: ConnectionCreatorRequest[UserRight] =>
+      if (right.userId == request.dbConnection.creator.id) {
+        BadRequest("Unable to grant any rights to the creator himself")
+      } else {
+        try {
+          right.save()
+          Ok(Json.toJson(right))
+        } catch {
+          case _: DataIntegrityException =>
+            NotFound("No such user or connection")
+          case _: DuplicateKeyException =>
+            Ok(Json.toJson(right)) // This user already has this right
+        }
+      }
     }
   }
 }
