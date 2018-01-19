@@ -5,12 +5,14 @@ import javax.inject.{Inject, Singleton}
 import auth.{ConnectionCreatorAction, ConnectionCreatorRequest, UserAction, UserRequest}
 import io.ebean.{DataIntegrityException, DuplicateKeyException}
 import models.entity.UserRight
+import models.repository.UserRightRepository
 import play.api.libs.json.Json
-import play.api.mvc.{AbstractController, ControllerComponents}
+import play.api.mvc._
 
 @Singleton
 class UserRightController @Inject()(cc: ControllerComponents,
                                     UserAction: UserAction,
+                                    userRightRepository: UserRightRepository,
                                     ConnectionCreatorAction: ConnectionCreatorAction)
   extends AbstractController(cc) {
 
@@ -30,6 +32,13 @@ class UserRightController @Inject()(cc: ControllerComponents,
             Ok(Json.toJson(right)) // This user already has this right
         }
       }
+    }
+  }
+
+  def ofUserInConnection(userId: Long, connectionId: Long) = UserAction {
+    import UserRight._
+    ConnectionCreatorAction(connectionId) { request: ConnectionCreatorRequest[AnyContent] =>
+      Ok(Json.toJson(userRightRepository.rightsIn(userId, connectionId)))
     }
   }
 }
