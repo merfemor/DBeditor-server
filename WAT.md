@@ -5,7 +5,7 @@
 - class can't have many @Id (only as @Embeddable)
 - EbeanException: null
 - can't use ALTER. Each small modification of model is DROP all tables, then CREATE
-- doen't use quotes in identificators, e.g. table for class User overrides PostgreSQL table "user".
+- doesn't use quotes in identificators, e.g. table for class User overrides PostgreSQL table "user".
 
 ## WAT Queries
 - select **t0.creator_id**, t0.id, **t0.creator_id**, t0.dbms from database t0 where (t0.creator_id) in (0) ;
