@@ -6,12 +6,13 @@ import com.rabbitmq.client.ConnectionFactory
 import com.typesafe.config.ConfigFactory
 
 class RabbitMQConfig {
-  val Host = config.getString("rabbitmq.host")
-  val Queue = config.getString("rabbitmq.queue")
-  val Exchange = config.getString("rabbitmq.exchange")
   private val config = ConfigFactory.load()
   private val factory = new ConnectionFactory()
   private val system = ActorSystem()
+
+  val Host: String = config.getString("rabbitmq.host")
+  val Queue: String = config.getString("rabbitmq.queue")
+  val Exchange: String = config.getString("rabbitmq.exchange")
 
   def connectionActor(actorName: String): ActorRef =
     system.actorOf(ConnectionActor.props(factory), actorName)

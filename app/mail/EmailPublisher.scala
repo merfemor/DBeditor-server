@@ -1,11 +1,13 @@
 package mail
 
+import javax.inject.Inject
+
 import akka.actor.{ActorRef, ActorSystem}
 import com.newmotion.akka.rabbitmq._
 import com.rabbitmq.client.Channel
 import play.api.Logger
 
-case class EmailPublisher(rabbitMQConfig: RabbitMQConfig) {
+case class EmailPublisher @Inject()(rabbitMQConfig: RabbitMQConfig) {
 
   import EmailPublisher._
   import rabbitMQConfig._

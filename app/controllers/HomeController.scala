@@ -2,14 +2,13 @@ package controllers
 
 import javax.inject._
 
-import mail.{EmailPublisher, RabbitMQConfig}
+import mail.EmailPublisher
 import play.api.mvc._
 
 
 @Singleton
 class HomeController @Inject()(cc: ControllerComponents,
-                               rabbitMQConfig: RabbitMQConfig) extends AbstractController(cc) {
-  val emailSender: EmailPublisher = EmailPublisher(rabbitMQConfig)
+                               emailSender: EmailPublisher) extends AbstractController(cc) {
 
   def index() = Action { implicit request: Request[AnyContent] =>
     emailSender.send(null)
