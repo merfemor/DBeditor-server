@@ -20,10 +20,11 @@ class UserController @Inject()(cc: ControllerComponents,
                                userRepository: UserRepository,
                                userRightsRepository: UserRightRepository,
                                UserAction: UserAction,
-                               random: Random,
                                emailSender: EmailSender
                               )
   extends AbstractController(cc) {
+
+  import UserController._
 
   /*
     def verify() = Action { implicit request: Request[AnyContent] =>
@@ -46,7 +47,7 @@ class UserController @Inject()(cc: ControllerComponents,
     val user = request.body
     val info = new UnverifiedUserInfo()
     info.user = user
-    info.verificationCode = random.alphanumeric.take(40).mkString("")
+    info.verificationCode = randomVerificationCode
     info.registrationDate = new Date()
 
     try {
@@ -80,6 +81,7 @@ class UserController @Inject()(cc: ControllerComponents,
     }
   }
 
+
   def updateUserProfileInfo() = UserAction(parse.json[User](User.userReadsOptionFields)) {
     request: UserRequest[User] =>
       val newUser = request.body
@@ -97,7 +99,13 @@ class UserController @Inject()(cc: ControllerComponents,
       if (newUser.email.nonEmpty) {
         somethingChanged = true
         curUser.email = newUser.email
-        // TODO: update verify info and resend email
+        val info = userRepository.getUnverifiedInfo(newUser.id).getOrElse {
+          val i = new UnverifiedUserInfo
+          i.user = newUser
+          i
+        }
+        info.verificationCode = randomVerificationCode
+        info.save()
       }
       try {
         if (somethingChanged) {
@@ -116,4 +124,10 @@ class UserController @Inject()(cc: ControllerComponents,
       user.delete()
       Ok(Json.toJson(user))
   }
+}
+
+object UserController {
+  private val random = new Random
+
+  def randomVerificationCode: String = random.alphanumeric.take(40).mkString
 }
