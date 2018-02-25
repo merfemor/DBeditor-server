@@ -10,13 +10,13 @@ abstract class EmailMessage(val email: String, val username: String) extends Ser
 }
 
 @SerialVersionUID(1L)
-case class ConfirmEmailMessage(override val email: String, override val username: String, confirmCode: String, confirmLink: URL)
+case class ConfirmEmailMessage(override val email: String, override val username: String, confirmLink: URL)
   extends EmailMessage(email = email, username = username) with Serializable {
   override def content: String =
     s"Hello, $username!\n\n" +
       s"You have successfully registered at DBeditor.\n" +
       s"To confirm your email follow this link:\n" +
-      s"${confirmLink.toString + confirmCode}\n\n" +
+      s"$confirmLink\n\n" +
       s"_______\n" +
       s"DBeditor team"
 

@@ -28,7 +28,7 @@ class EmailSender {
   props.put("mail.smtp.starttls.enable", "true")
 
   def send(emailMessage: EmailMessage): Unit = {
-    val session = Session.getDefaultInstance(props, auth)
+    val session = Session.getInstance(props, auth)
 
     val msg = new MimeMessage(session)
     msg.setFrom(new InternetAddress(notifyEmail))
