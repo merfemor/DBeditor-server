@@ -3,9 +3,7 @@ package models.entity
 import java.util
 import javax.persistence._
 
-
 import io.ebean.annotation.NotNull
-import play.api.libs.json.{JsObject, JsPath, JsResult, JsValue, Json, Reads, Writes}
 
 @Entity
 @Table(name = "\"user\"")
@@ -47,8 +45,8 @@ object User {
   }
 
   import play.api.libs.functional.syntax._
-  import play.api.libs.json._
   import play.api.libs.json.Reads._
+  import play.api.libs.json._
 
 
   implicit val userWrites = new Writes[User] {
