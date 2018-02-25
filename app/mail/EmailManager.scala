@@ -13,8 +13,10 @@ class EmailManager @Inject()(rabbitMQConfig: RabbitMQConfig) {
 
   private def consume(o: Object): Unit = {
     o match {
-      case ConfirmEmailMessage(email, confirmCode) =>
-        Logger.debug(s"Consume confirm email message with email = $email, confirmCode = $confirmCode")
+      case m: ConfirmEmailMessage =>
+        Logger.debug(s"Received confirm email message: $m")
+      case m: JoinDatabaseNotification =>
+        Logger.debug(s"Received join database notification message: $m")
       case _ =>
         Logger.warn("Received a message of unknown type")
     }
