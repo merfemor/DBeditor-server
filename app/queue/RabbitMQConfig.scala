@@ -1,4 +1,4 @@
-package mail
+package queue
 
 import akka.actor.{ActorRef, ActorSystem}
 import com.newmotion.akka.rabbitmq._

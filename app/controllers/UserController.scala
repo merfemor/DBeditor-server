@@ -4,11 +4,12 @@ import javax.inject._
 
 import auth.{UserAction, UserRequest}
 import io.ebean.DuplicateKeyException
-import mail.EmailConsumer
 import models.entity.User
 import models.repository._
+import play.api.Logger
 import play.api.libs.json.Json
 import play.api.mvc._
+import queue.{QueueMessageConsumer, RabbitMQConfig}
 
 
 @Singleton
@@ -16,9 +17,12 @@ class UserController @Inject()(cc: ControllerComponents,
                                userRepository: UserRepository,
                                userRightsRepository: UserRightRepository,
                                UserAction: UserAction,
-                               val emailReceiver: EmailConsumer
+                               val rabbitMQConfig: RabbitMQConfig
                               )
   extends AbstractController(cc) {
+  val queueMessageConsumer = QueueMessageConsumer(rabbitMQConfig, o => {
+    Logger.info(s"Get object $o")
+  })
 
   /*
     def verify() = Action { implicit request: Request[AnyContent] =>

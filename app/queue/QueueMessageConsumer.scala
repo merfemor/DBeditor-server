@@ -1,15 +1,15 @@
-package mail
+package queue
 
+import java.io.{ByteArrayInputStream, ObjectInputStream}
 import javax.inject.Inject
 
 import akka.actor.ActorRef
 import com.newmotion.akka.rabbitmq.{ChannelActor, CreateChannel}
 import com.rabbitmq.client._
-import play.api.Logger
 
-case class EmailConsumer @Inject()(rabbitMQConfig: RabbitMQConfig) {
+case class QueueMessageConsumer @Inject()(rabbitMQConfig: RabbitMQConfig, handler: Function[Object, Any]) {
 
-  import EmailConsumer._
+  import QueueMessageConsumer._
   import rabbitMQConfig._
 
   private val connection = rabbitMQConfig.connectionActor(ActorName)
@@ -19,17 +19,24 @@ case class EmailConsumer @Inject()(rabbitMQConfig: RabbitMQConfig) {
     channel.queueBind(queue, Exchange, "")
     val consumer = new DefaultConsumer(channel) {
       override def handleDelivery(a: String, b: Envelope, c: AMQP.BasicProperties, body: Array[Byte]) = {
-        val s = new String(body, "UTF-8")
-        Logger.info(s"Receive message: $s")
+        handler(deserializeObject(body))
       }
     }
     channel.basicConsume(Queue, true, consumer)
-    Logger.info("Setup channel")
   }
 
   connection ! CreateChannel(ChannelActor.props(setup), Some("consumer"))
 }
 
-object EmailConsumer {
+object QueueMessageConsumer {
   private val ActorName = "email-receiver-connection"
+
+  private def deserializeObject(bytes: Array[Byte]): Object = {
+    val byteStream = new ByteArrayInputStream(bytes)
+    val objectInputStream = new ObjectInputStream(byteStream)
+    val o = objectInputStream.readObject()
+    objectInputStream.close()
+    byteStream.close()
+    o
+  }
 }

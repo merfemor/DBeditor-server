@@ -2,16 +2,17 @@ package controllers
 
 import javax.inject._
 
-import mail.EmailPublisher
+import mail.ConfirmEmailMessage
 import play.api.mvc._
+import queue.QueueMessagePublisher
 
 
 @Singleton
 class HomeController @Inject()(cc: ControllerComponents,
-                               emailSender: EmailPublisher) extends AbstractController(cc) {
+                               queuePublisher: QueueMessagePublisher) extends AbstractController(cc) {
 
   def index() = Action { implicit request: Request[AnyContent] =>
-    emailSender.send(null)
+    queuePublisher.publish(new ConfirmEmailMessage("test@test.com", "123456"))
     Ok(views.html.main())
   }
 
