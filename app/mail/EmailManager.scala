@@ -1,22 +1,23 @@
 package mail
 
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 
 import play.api.Logger
 import queue.{QueueMessageConsumer, QueueMessagePublisher, RabbitMQConfig}
 
+@Singleton
 class EmailManager @Inject()(rabbitMQConfig: RabbitMQConfig) {
-  val publisher = QueueMessagePublisher(rabbitMQConfig)
-  val consumer = QueueMessageConsumer(rabbitMQConfig, consume)
+  private val publisher = QueueMessagePublisher(rabbitMQConfig)
+  private val consumer = QueueMessageConsumer(rabbitMQConfig, consume)
+  @Inject
+  private var emailSender: EmailSender = _
 
   def send(emailMessage: EmailMessage): Unit = publisher.publish(emailMessage)
 
   private def consume(o: Object): Unit = {
     o match {
-      case m: ConfirmEmailMessage =>
-        Logger.debug(s"Received confirm email message: $m")
-      case m: JoinDatabaseNotification =>
-        Logger.debug(s"Received join database notification message: $m")
+      case m: EmailMessage =>
+        emailSender.send(m)
       case _ =>
         Logger.warn("Received a message of unknown type")
     }

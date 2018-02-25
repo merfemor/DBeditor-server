@@ -13,5 +13,6 @@ libraryDependencies ++= Seq(
   jdbc,
   "org.postgresql" % "postgresql" % "9.4.1211",
   "com.rabbitmq" % "amqp-client" % "5.1.1",
-  "com.newmotion" %% "akka-rabbitmq" % "5.0.0"
+  "com.newmotion" %% "akka-rabbitmq" % "5.0.0",
+  "javax.mail" % "mail" % "1.4.7"
 )

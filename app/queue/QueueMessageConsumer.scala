@@ -12,15 +12,14 @@ case class QueueMessageConsumer @Inject()(rabbitMQConfig: RabbitMQConfig, handle
   import QueueMessageConsumer._
   import rabbitMQConfig._
 
+
   private val connection = rabbitMQConfig.connectionActor(ActorName)
 
   private def setup(channel: Channel, self: ActorRef) {
     val queue = channel.queueDeclare().getQueue
     channel.queueBind(queue, Exchange, "")
     val consumer = new DefaultConsumer(channel) {
-      override def handleDelivery(a: String, b: Envelope, c: AMQP.BasicProperties, body: Array[Byte]) = {
-        handler(deserializeObject(body))
-      }
+      override def handleDelivery(a: String, b: Envelope, c: AMQP.BasicProperties, body: Array[Byte]) = handler(deserializeObject(body))
     }
     channel.basicConsume(Queue, true, consumer)
   }

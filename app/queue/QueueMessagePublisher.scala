@@ -6,6 +6,9 @@ import javax.inject.Inject
 import akka.actor.{ActorRef, ActorSystem}
 import com.newmotion.akka.rabbitmq._
 import com.rabbitmq.client.Channel
+import play.api.inject.ApplicationLifecycle
+
+import scala.concurrent.Future
 
 case class QueueMessagePublisher @Inject()(rabbitMQConfig: RabbitMQConfig) {
 
@@ -16,16 +19,24 @@ case class QueueMessagePublisher @Inject()(rabbitMQConfig: RabbitMQConfig) {
   private val channel = connection.createChannel(ChannelActor.props(setupPublisher), Some("publisher"))
   private val system = ActorSystem()
 
+  @Inject
+  private var lifecycle: ApplicationLifecycle = _
+
+  @Inject
+  def addStopHook() {
+    lifecycle.addStopHook { () =>
+      Future.successful {
+        system stop connection
+      }
+    }
+  }
+
   def publish(o: Object) = {
     channel ! ChannelMessage(publishBytes(serializeObject(o)), dropIfNoChannel = false)
   }
 
   private def publishBytes(bytes: Array[Byte])(channel: Channel): Unit = {
     channel.basicPublish(Exchange, "", null, bytes)
-  }
-
-  def destroy() = {
-    system stop connection
   }
 
   private def setupPublisher(channel: Channel, self: ActorRef) {
