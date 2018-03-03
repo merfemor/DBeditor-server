@@ -1,9 +1,9 @@
 package websocket
 
-import akka.actor.{Actor, ActorRef, Props}
+import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import com.fasterxml.jackson.core.JsonParseException
 import com.google.inject.Inject
-import event.request.{AuthEvent, DdlEvent}
+import event.request.{AddUserEvent, AuthEvent, DdlEvent, RemoveUserEvent}
 import models.entity.Database
 import models.repository.{DatabaseRepository, UserRepository, UserRightRepository}
 import play.api.Logger
@@ -21,6 +21,8 @@ class WebSocketActor(out: ActorRef) extends Actor {
   var userRepository: UserRepository = _
   @Inject
   var connectionRepository: DatabaseRepository = _
+
+  private val notifier: ActorRef = ActorSystem().actorOf(NotifierActor.props, "notifier-actor")
 
   Logger.info(logmsg("connection opened"))
   private var authInfo: Option[AuthInfo] = None
@@ -62,6 +64,14 @@ class WebSocketActor(out: ActorRef) extends Actor {
     })
   }
 
+  override def postStop(): Unit = {
+    authInfo match {
+      case Some(AuthInfo(connection, _)) =>
+        notifier ! RemoveUserEvent(out, connection.id)
+    }
+    Logger.info(logmsg("connection closed"))
+  }
+
   private def receiveAuthEvent(authEvent: AuthEvent): Unit = {
     Logger.debug(logmsg("receive auth event"))
     userRepository.findById(authEvent.userId) match {
@@ -73,6 +83,7 @@ class WebSocketActor(out: ActorRef) extends Actor {
               out ! "No rights for this connection"
             } else {
               authInfo = Some(AuthInfo(connection, rights))
+              notifier ! AddUserEvent(out, connection.id)
               out ! "Auth OK"
             }
           case None =>
@@ -82,8 +93,6 @@ class WebSocketActor(out: ActorRef) extends Actor {
         out ! "Failed to authorize: no such user"
     }
   }
-
-  override def postStop(): Unit = Logger.info(logmsg("connection closed"))
 
   case class AuthInfo(dbConnection: Database, right: Seq[models.entity.Right])
 
