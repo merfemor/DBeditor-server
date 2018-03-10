@@ -1,7 +1,7 @@
 package websocket
 
 import akka.actor.{Actor, ActorRef, Props}
-import event.request.{AddUserEvent, NotifyEvent, RemoveUserEvent}
+import websocket.event.{AddUserEvent, NotifyEvent, RemoveUserEvent}
 
 object NotifierActor {
   def props = Props(new NotifierActor)
@@ -13,7 +13,7 @@ class NotifierActor extends Actor {
 
   override def receive = {
     case event: NotifyEvent =>
-      listeners(event.connectionId).foreach(_ ! event)
+      listeners(event.connectionId).foreach(_ ! event.event)
     case event: AddUserEvent =>
       listeners.getOrElse(event.connectionId, {
         listeners + (event.connectionId -> Set.empty[ActorRef])

@@ -1,5 +1,6 @@
-package event.request
+package websocket.event
 
+import models.entity.Database
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads.minLength
 import play.api.libs.json.{JsPath, Reads}
@@ -13,3 +14,5 @@ object AuthEvent {
 }
 
 case class AuthEvent(var connectionId: Long, var userId: Long, var userPassword: String)
+
+case class AuthInfo(dbConnection: Database, right: Seq[models.entity.Right])

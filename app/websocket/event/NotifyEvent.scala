@@ -1,6 +1,8 @@
-package event.request
+package websocket.event
 
 import akka.actor.ActorRef
+
+case class DbEvent()
 
 case class NotifyEvent(event: DbEvent, connectionId: Long)
 

@@ -3,11 +3,10 @@ package websocket
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import com.fasterxml.jackson.core.JsonParseException
 import com.google.inject.Inject
-import event.request.{AddUserEvent, AuthEvent, DdlEvent, RemoveUserEvent}
-import models.entity.Database
 import models.repository.{DatabaseRepository, UserRepository, UserRightRepository}
 import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
+import websocket.event._
 
 object WebSocketActor {
   def props(out: ActorRef) = Props(new WebSocketActor(out))
@@ -43,7 +42,7 @@ class WebSocketActor(out: ActorRef) extends Actor {
     jsValue.validate[AuthEvent].fold(_ => {
       if (authInfo.isEmpty) {
         Logger.debug(logmsg("reject unauthorized access"))
-        out ! "at first you need to authorize"
+        out ! "you need to authorize"
         return
       }
       receiveAuthorizedDbEvent(jsValue)
@@ -51,16 +50,13 @@ class WebSocketActor(out: ActorRef) extends Actor {
   }
 
   private def receiveAuthorizedDbEvent(jsValue: JsValue): Unit = {
-    jsValue.validate[DdlEvent].fold(_ => {
-      Logger.debug(logmsg("failed to cast json to any known type"))
-      out ! "failed to cast JSON to any known type"
+    jsValue.validate[SqlQueryEvent].fold(_ => {
+      val msg = "failed to cast json to any known type"
+      Logger.debug(logmsg(msg))
+      out ! msg
     }, result => {
-      if (!authInfo.get.right.contains(models.entity.Right.DDL)) {
-        Logger.debug(logmsg("failed to execute DDL request: user doesn't have the right DDL"))
-        out ! "failed to execute DDL request: user doesn't have the right DDL"
-      }
-      Logger.debug(logmsg(s"get DDL event: $result"))
-      out ! "executing DDL..."
+      Logger.debug(logmsg(s"get SQL query websocket.event: ${result.query}"))
+      //... executing sql
     })
   }
 
@@ -73,7 +69,7 @@ class WebSocketActor(out: ActorRef) extends Actor {
   }
 
   private def receiveAuthEvent(authEvent: AuthEvent): Unit = {
-    Logger.debug(logmsg("receive auth event"))
+    Logger.debug(logmsg("receive auth websocket.event"))
     userRepository.findById(authEvent.userId) match {
       case Some(_) =>
         connectionRepository.findById(authEvent.connectionId) match {
@@ -93,8 +89,6 @@ class WebSocketActor(out: ActorRef) extends Actor {
         out ! "Failed to authorize: no such user"
     }
   }
-
-  case class AuthInfo(dbConnection: Database, right: Seq[models.entity.Right])
 
   private def logmsg = s"${WebSocketActor.getClass.getName}:${self.path}: " + _
 }
