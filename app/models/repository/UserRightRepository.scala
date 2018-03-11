@@ -4,7 +4,7 @@ import javax.inject.Inject
 import javax.persistence.EntityNotFoundException
 
 import io.ebean.Ebean
-import models.entity.{Right, UserRight}
+import models.entity.{SqlRight, UserRight}
 import play.db.ebean.EbeanConfig
 
 import scala.collection.JavaConverters._
@@ -12,7 +12,7 @@ import scala.collection.JavaConverters._
 class UserRightRepository @Inject()(override protected val ebeanConfig: EbeanConfig)
   extends BaseRepository(ebeanConfig: EbeanConfig) {
 
-  def rightsIn(userId: Long, databaseId: Long): Seq[Right] =
+  def rightsIn(userId: Long, databaseId: Long): Seq[SqlRight] =
     ebeanServer.find(classOf[UserRight])
       .where
       .eq("database_id", databaseId)
@@ -24,14 +24,14 @@ class UserRightRepository @Inject()(override protected val ebeanConfig: EbeanCon
 
 
   // TODO: catch exception and make return type Option[String]
-  def grantRight(userId: Long, databaseId: Long, right: Right): Unit = {
+  def grantRight(userId: Long, databaseId: Long, right: SqlRight): Unit = {
     val newRight = new UserRight(userId, databaseId)
     newRight.right = right
     Ebean.insert(newRight)
   }
 
 
-  def findRight(userId: Long, databaseId: Long, right: Right): Option[UserRight] = {
+  def findRight(userId: Long, databaseId: Long, right: SqlRight): Option[UserRight] = {
     val userRight = new UserRight(userId, databaseId)
     userRight.right = right
     try {

@@ -16,7 +16,7 @@ protected class UserRightId {
   @NotNull
   @Enumerated
   @Column(name = "user_right")
-  var right: Right = _
+  var right: SqlRight = _
 
   override def equals(other: Any): Boolean = other match {
     case that: UserRightId =>
@@ -59,14 +59,14 @@ class UserRight extends Model {
     userRightId.databaseId = databaseId
   }
 
-  def this(userId: Long, databaseId: Long, right: Right) {
+  def this(userId: Long, databaseId: Long, right: SqlRight) {
     this(userId, databaseId)
     this.right = right
   }
 
-  def right: Right = userRightId.right
+  def right: SqlRight = userRightId.right
 
-  def right_=(r: Right): Unit = userRightId.right = r
+  def right_=(r: SqlRight): Unit = userRightId.right = r
 
   def userId: Long = userRightId.userId
 
@@ -80,14 +80,14 @@ object UserRight {
   import play.api.libs.json.Reads._
   import play.api.libs.json._
 
-  implicit val rightWrites = new Writes[Right] {
-    override def writes(o: Right): JsValue = Json.toJson(o.toString)
+  implicit val rightWrites = new Writes[SqlRight] {
+    override def writes(o: SqlRight): JsValue = Json.toJson(o.toString)
   }
 
-  implicit val rightReads: Reads[Right] = JsPath.read[String]
+  implicit val rightReads: Reads[SqlRight] = JsPath.read[String]
     .filter(JsonValidationError("No such right"))(s =>
-      Try.apply[Right](Right.valueOf(s)).toOption.isDefined
-    ).map(Right.valueOf)
+      Try.apply[SqlRight](SqlRight.valueOf(s)).toOption.isDefined
+    ).map(SqlRight.valueOf)
 
   implicit val userRightWrites = new Writes[UserRight] {
     def writes(userRight: UserRight): JsObject = Json.obj(
@@ -100,6 +100,6 @@ object UserRight {
   implicit val userRightReads: Reads[UserRight] = (
     (JsPath \ "user_id").read[Long] and
       (JsPath \ "connection_id").read[Long] and
-      (JsPath \ "right").read[Right]
+      (JsPath \ "right").read[SqlRight]
     ) ((u, c, r) => new UserRight(u, c, r))
 }
