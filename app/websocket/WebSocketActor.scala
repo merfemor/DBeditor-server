@@ -1,23 +1,23 @@
 package websocket
 
-import akka.actor.{Actor, ActorRef, ActorSystem, Props}
+import akka.actor.{Actor, ActorRef, Props}
 import com.fasterxml.jackson.core.JsonParseException
+import controllers.Factory._
 import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
 import websocket.event._
+
 
 object WebSocketActor {
   def props(out: ActorRef) = Props(new WebSocketActor(out))
 }
 
 class WebSocketActor(out: ActorRef) extends Actor {
-
-  import controllers.Factory._
-
-  private val notifier: ActorRef = ActorSystem().actorOf(NotifierActor.props, "notifier-actor")
+  private val notifier: ActorRef = actorSystem.actorOf(NotifierActor.props, "notifier-actor")
+  private var authInfo: Option[AuthInfo] = None
 
   Logger.info(logmsg("connection opened"))
-  private var authInfo: Option[AuthInfo] = None
+  out ! "Hello! You need to authorize."
 
   def receive: PartialFunction[Any, Unit] = {
     case msg: String =>
@@ -53,10 +53,7 @@ class WebSocketActor(out: ActorRef) extends Actor {
     })
   }
 
-  override def postStop(): Unit = {
-    authInfo.foreach(inf => notifier ! RemoveUserEvent(out, inf.dbConnection.id))
-    Logger.info(logmsg("connection closed"))
-  }
+  private def logmsg = s"${WebSocketActor.getClass.getName}:${self.path}: " + _
 
   private def receiveAuthEvent(authEvent: AuthEvent): Unit = {
     Logger.debug(logmsg("receive auth websocket.event"))
@@ -65,7 +62,7 @@ class WebSocketActor(out: ActorRef) extends Actor {
         connectionRepository.findById(authEvent.connectionId) match {
           case Some(connection) =>
             val rights = userRightRepository.rightsIn(authEvent.userId, authEvent.connectionId)
-            if (rights.isEmpty) {
+            if (rights.isEmpty && authEvent.userId != connection.creator.id) {
               out ! "No rights for this connection"
             } else {
               authInfo = Some(AuthInfo(connection, rights))
@@ -80,5 +77,9 @@ class WebSocketActor(out: ActorRef) extends Actor {
     }
   }
 
-  private def logmsg = s"${WebSocketActor.getClass.getName}:${self.path}: " + _
+  override def postStop(): Unit = {
+    authInfo.foreach(inf => notifier ! RemoveUserEvent(out, inf.dbConnection.id))
+    out ! "connection closed"
+    Logger.info(logmsg("connection closed"))
+  }
 }

@@ -3,9 +3,10 @@ package queue
 import java.io.{ByteArrayOutputStream, ObjectOutputStream}
 import javax.inject.Inject
 
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.ActorRef
 import com.newmotion.akka.rabbitmq._
 import com.rabbitmq.client.Channel
+import controllers.Factory
 import play.api.inject.ApplicationLifecycle
 
 import scala.concurrent.Future
@@ -17,7 +18,7 @@ case class QueueMessagePublisher @Inject()(rabbitMQConfig: RabbitMQConfig) {
 
   private val connection = rabbitMQConfig.connectionActor(ActorName)
   private val channel = connection.createChannel(ChannelActor.props(setupPublisher), Some("publisher"))
-  private val system = ActorSystem()
+  private val system = Factory.actorSystem
 
   @Inject
   private var lifecycle: ApplicationLifecycle = _
