@@ -15,7 +15,6 @@ object WebSocketActor {
 class WebSocketActor(out: ActorRef) extends Actor {
 
   import controllers.Factory._
-  private lazy val parser: ActorRef = actorSystem.actorOf(SqlParseActor.props, "sql-parse-actor")
   private var authInfo: Option[AuthInfo] = None
 
   Logger.info(logmsg("connection opened"))

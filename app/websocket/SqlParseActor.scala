@@ -54,7 +54,7 @@ class SqlParseActor extends Actor {
         executeSelectQuery(query, authInfo).fold(
           e => replyTo ! s"Failed to execute SQL query: ${e.getMessage}",
           //resp => actorRef ! Json.toJson(resp)
-          resp => replyTo ! Json.toJson("olool")
+          replyTo ! Json.toJson(_).toString
         )
       case _: Insert | _: Delete | _: Update =>
         if (!authInfo.rights.exists(SqlRight.isIncludes(SqlRight.DML, _))) {
@@ -66,18 +66,17 @@ class SqlParseActor extends Actor {
     }
   }
 
-
   private def executeSelectQuery(query: String, authInfo: AuthInfo): Try[SelectResponse] = {
     import authInfo.dbConnection._
     val jdbcUrl = DbUtils.JdbcUrl(host, port, database, dbms)
     DbUtils.execInStatement(jdbcUrl, username, password) { statement =>
       val rs = statement.executeQuery(query)
-      val columnsRange = Range(0, rs.getMetaData.getColumnCount)
-      val objs: Seq[Seq[Object]] = Seq[Seq[Object]]()
+      val columnsRange = Range(1, rs.getMetaData.getColumnCount + 1)
+      var objs = mutable.ArrayBuffer.empty[Array[String]]
       while (rs.next()) {
-        objs +: columnsRange.map(rs.getObject)
+        objs += columnsRange.map(rs.getString).toArray
       }
-      SelectResponse(objs)
+      SelectResponse(objs.toArray)
     }
   }
 
@@ -99,7 +98,7 @@ class SqlParseActor extends Actor {
     )
   }
 
-  private def receiveDbInfoEvent(event: DbInfoEvent) = {
+  private def receiveDbInfoEvent(event: DbInfoEvent): Unit = {
     import event._
     val url = DbUtils.JdbcUrl(connection.host, connection.port, connection.database, connection.dbms)
     Logger.debug(logmsg(s"reading DB info of $url"))
