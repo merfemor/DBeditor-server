@@ -14,6 +14,7 @@ import net.sf.jsqlparser.statement.select.Select
 import net.sf.jsqlparser.statement.update.Update
 import play.api.Logger
 import play.api.libs.json.Json
+import util.DbUtils
 import websocket.event.{AuthInfo, AuthorizedSqlQueryEvent, SelectResponse}
 
 import scala.util.Try
@@ -63,8 +64,10 @@ class SqlParseActor extends Actor {
   }
 
 
-  private def executeSelectQuery(query: String, authInfo: AuthInfo): Try[SelectResponse] =
-    execInStatement(authInfo.dbConnection.url) { statement =>
+  private def executeSelectQuery(query: String, authInfo: AuthInfo): Try[SelectResponse] = {
+    import authInfo.dbConnection._
+    val jdbcUrl = DbUtils.JdbcUrl(host, port, database, dbms)
+    execInStatement(jdbcUrl, username, password) { statement =>
       val rs = statement.executeQuery(query)
       val columnsRange = Range(0, rs.getMetaData.getColumnCount)
       val objs: Seq[Seq[Object]] = Seq[Seq[Object]]()
@@ -73,9 +76,10 @@ class SqlParseActor extends Actor {
       }
       SelectResponse(objs)
     }
+  }
 
-  private def execInStatement[A](url: String)(fn: sql.Statement => A): Try[A] = Try {
-    val con = DriverManager.getConnection(url)
+  private def execInStatement[A](url: String, user: String, password: String)(fn: sql.Statement => A): Try[A] = Try {
+    val con = DriverManager.getConnection(url, user, password)
     val st = con.createStatement()
     val res = fn(st)
     st.close()

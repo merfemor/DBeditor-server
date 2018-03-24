@@ -2,7 +2,7 @@ package controllers
 
 import javax.inject._
 
-import auth.{ConnectionCreatorAction, ConnectionCreatorRequest, UserAction, UserRequest}
+import controllers.auth.{ConnectionCreatorAction, ConnectionCreatorRequest, UserAction, UserRequest}
 import models.entity.Database
 import models.repository._
 import play.api.libs.json._
@@ -45,9 +45,25 @@ class DatabaseController @Inject()(cc: ControllerComponents,
           val newDb = j.get
           var changed = false
 
-          if (newDb.url.nonEmpty && newDb.url != oldDb.url) {
+          if (newDb.host.nonEmpty && newDb.host != oldDb.host) {
             changed = true
-            oldDb.url = newDb.url
+            oldDb.host = newDb.host
+          }
+          if (newDb.database.nonEmpty && newDb.database != oldDb.database) {
+            changed = true
+            oldDb.database = newDb.database
+          }
+          if (newDb.username.nonEmpty && newDb.username != oldDb.username) {
+            changed = true
+            oldDb.username = newDb.username
+          }
+          if (newDb.password.nonEmpty && newDb.password != oldDb.password) {
+            changed = true
+            oldDb.password = newDb.password
+          }
+          if (newDb.port != oldDb.port) {
+            changed = true
+            oldDb.port = newDb.port
           }
           if (newDb.dbms != oldDb.dbms) {
             changed = true
