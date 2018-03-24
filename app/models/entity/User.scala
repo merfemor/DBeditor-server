@@ -32,6 +32,8 @@ class User extends BaseModel {
   def this(_username: String, _email: String, _password: String) = {
     this
   }
+
+  override def toString = s"User($id, $username, $email, $password)"
 }
 
 object User {

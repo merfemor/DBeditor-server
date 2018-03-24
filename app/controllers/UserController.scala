@@ -2,15 +2,18 @@ package controllers
 
 import java.net.{MalformedURLException, URL}
 import java.util.Date
+import java.util.concurrent.TimeUnit
 import javax.inject._
 
-import auth.{UserAction, UserRequest}
+import controllers.auth.{UserAction, UserRequest}
 import io.ebean.DuplicateKeyException
 import mail.{ConfirmEmailMessage, EmailSender}
 import models.entity.{UnverifiedUserInfo, User}
 import models.repository._
+import play.api.Logger
 import play.api.libs.json.Json
 import play.api.mvc._
+import util.LogUtils
 
 import scala.util.Random
 
@@ -26,24 +29,12 @@ class UserController @Inject()(cc: ControllerComponents,
 
   import UserController._
 
-  /*
-    def verify() = Action { implicit request: Request[AnyContent] =>
-      val info = userRepository.getUnverifiedInfo(1)
-      if (info.isDefined) {
-        Logger.debug(info.get.verificationCode)
-
-        val info1 = userRepository.getUnverifiedInfo(info.get.verificationCode)
-        Logger.debug(info1.get.verificationCode)
-      }
-      Ok(views.html.main())
-    }*/
-
-
   def currentUserInfo() = UserAction { userRequest: UserRequest[AnyContent] =>
     Ok(Json.toJson(userRequest.user))
   }
 
   def register(verificationPageLink: String) = Action(parse.json[User]) { request: Request[User] =>
+    LogUtils.logRequest(request)
     val user = request.body
     val info = new UnverifiedUserInfo()
     info.user = user
@@ -82,30 +73,32 @@ class UserController @Inject()(cc: ControllerComponents,
   }
 
 
-  def updateUserProfileInfo() = UserAction(parse.json[User](User.userReadsOptionFields)) {
+  def patchUser() = UserAction(parse.json[User](User.userReadsOptionFields)) {
     request: UserRequest[User] =>
       val newUser = request.body
       val curUser = request.user
       var somethingChanged = false
 
-      if (newUser.username.nonEmpty) {
+      if (newUser.username.nonEmpty && newUser.username != curUser.username) {
         somethingChanged = true
         curUser.username = newUser.username
       }
-      if (newUser.password.nonEmpty) {
+      if (newUser.password.nonEmpty && newUser.password != curUser.password) {
         somethingChanged = true
         curUser.password = newUser.password
       }
-      if (newUser.email.nonEmpty) {
+      if (newUser.email.nonEmpty && newUser.email != curUser.email) {
         somethingChanged = true
         curUser.email = newUser.email
-        val info = userRepository.getUnverifiedInfo(newUser.id).getOrElse {
+        val info = userRepository.getUnverifiedInfo(curUser.id).getOrElse {
           val i = new UnverifiedUserInfo
-          i.user = newUser
+          i.user = curUser
           i
         }
         info.verificationCode = randomVerificationCode
         info.save()
+        val url = new URL(s"http://localhost:9000/verify?code=${info.verificationCode}")
+        emailSender.send(ConfirmEmailMessage(curUser.email, curUser.username, url))
       }
       try {
         if (somethingChanged) {
@@ -124,10 +117,26 @@ class UserController @Inject()(cc: ControllerComponents,
       user.delete()
       Ok(Json.toJson(user))
   }
+
+  def verifyEmail(code: String) = Action {
+    Logger.info(s"GET /verify?code=$code")
+    userRepository.getUnverifiedInfo(code) match {
+      case Some(info) =>
+        val timeDiff = new Date().getTime - info.registrationDate.getTime
+        info.deletePermanent()
+        if (TimeUnit.HOURS.convert(timeDiff, TimeUnit.MILLISECONDS) < 24) {
+          Ok("")
+        } else {
+          NotFound("no such verification code")
+        }
+      case None =>
+        NotFound("no such verification code")
+    }
+  }
 }
 
 object UserController {
-  private val random = new Random
+  private lazy val random = new Random
 
   def randomVerificationCode: String = random.alphanumeric.take(40).mkString
 }

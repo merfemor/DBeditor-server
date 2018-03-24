@@ -2,7 +2,7 @@ package controllers
 
 import javax.inject._
 
-import controllers.auth.{ConnectionCreatorAction, ConnectionCreatorRequest, UserAction, UserRequest}
+import controllers.auth.{ConnectionCreatorAction, ConnectionRequest, UserAction, UserRequest}
 import models.entity.Database
 import models.repository._
 import play.api.libs.json._
@@ -14,6 +14,7 @@ import scala.collection.JavaConverters._
 @Singleton
 class DatabaseController @Inject()(cc: ControllerComponents,
                                    databaseRepository: DatabaseRepository,
+                                   userRightRepository: UserRightRepository,
                                    UserAction: UserAction,
                                    ConnectionCreatorAction: ConnectionCreatorAction)
   extends AbstractController(cc) {
@@ -26,19 +27,25 @@ class DatabaseController @Inject()(cc: ControllerComponents,
     Ok(Json.toJson(db))
   }
 
-  def connectionsCreatedByCurrentUser() = UserAction { request: UserRequest[AnyContent] =>
-    Ok(Json.toJson(request.user.createdDatabases.asScala))
+  def userConnections(createdOnly: Boolean) = UserAction { request: UserRequest[AnyContent] =>
+    import request.user
+    Ok(Json.toJson(
+      if (createdOnly)
+        user.createdDatabases.asScala.map(_.id)
+      else
+        databaseRepository.managedOrCreatedBy(user.id).map(_.id)
+    ))
   }
 
   def deleteConnection(id: Long) = UserAction {
-    ConnectionCreatorAction(id) { request: ConnectionCreatorRequest[AnyContent] =>
+    ConnectionCreatorAction(id) { request: ConnectionRequest[AnyContent] =>
       request.dbConnection.delete()
       Ok(Json.toJson(request.dbConnection))
     }
   }
 
   def updateDatabaseConnectionInfo(id: Long) = UserAction(parse.json) {
-    ConnectionCreatorAction(id) { request: ConnectionCreatorRequest[JsValue] =>
+    ConnectionCreatorAction(id) { request: ConnectionRequest[JsValue] =>
       val oldDb = request.dbConnection
       request.body.validate(Database.databaseReadsOptionFields(oldDb.dbms)) match {
         case j: JsSuccess[Database] =>
@@ -76,4 +83,6 @@ class DatabaseController @Inject()(cc: ControllerComponents,
       }
     }
   }
+
+  def connectionInfo(id: Long) = play.mvc.Results.TODO
 }

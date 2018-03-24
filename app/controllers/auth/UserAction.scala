@@ -5,12 +5,12 @@ import javax.inject.Inject
 import models.entity.User
 import models.repository.UserRepository
 import play.api.mvc._
+import util.LogUtils
 
 import scala.concurrent.{ExecutionContext, Future}
 
 
 case class UserRequest[A](user: User, request: Request[A]) extends WrappedRequest[A](request)
-
 
 case class UserAction @Inject()(parser: BodyParsers.Default, userRepository: UserRepository)(implicit val executionContext: ExecutionContext)
   extends ActionBuilder[UserRequest, AnyContent] {
@@ -19,6 +19,7 @@ case class UserAction @Inject()(parser: BodyParsers.Default, userRepository: Use
   import UserAction._
 
   override def invokeBlock[B](request: Request[B], block: UserRequest[B] => Future[Result]): Future[Result] = {
+    LogUtils.logRequest(request)
     invokeCheckError(request).fold(Future.successful, u => block(UserRequest(u, request)))
   }
 
