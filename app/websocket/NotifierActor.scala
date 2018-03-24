@@ -14,14 +14,14 @@ class NotifierActor extends Actor {
   private var listeners = mutable.HashMap.empty[Long, mutable.Set[ActorRef]]
 
   override def receive: PartialFunction[Any, Unit] = {
-    case event: NotifyEvent =>
-      listeners(event.connectionId).foreach(_ ! event.event)
-    case event: AddUserEvent =>
-      listeners.getOrElse(event.connectionId, {
-        listeners += (event.connectionId -> mutable.Set.empty[ActorRef])
-        listeners(event.connectionId)
-      }) += event.actor
-    case event: RemoveUserEvent =>
-      listeners(event.connectionId) -= event.actor
+    case e: NotifyEvent =>
+      listeners(e.connectionId).foreach(_ ! e.message)
+    case e: AddUserEvent =>
+      listeners.getOrElse(e.connectionId, {
+        listeners += (e.connectionId -> mutable.Set.empty[ActorRef])
+        listeners(e.connectionId)
+      }) += e.actor
+    case e: RemoveUserEvent =>
+      listeners(e.connectionId) -= e.actor
   }
 }

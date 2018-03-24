@@ -3,6 +3,7 @@ package websocket
 import java.sql.ResultSet
 
 import akka.actor.{Actor, ActorRef, Props}
+import controllers.Factory
 import models.entity.SqlRight
 import net.sf.jsqlparser.parser.CCJSqlParserUtil
 import net.sf.jsqlparser.statement.Statement
@@ -13,7 +14,7 @@ import net.sf.jsqlparser.statement.update.Update
 import play.api.Logger
 import play.api.libs.json.Json
 import util.DbUtils
-import websocket.event.{AuthInfo, AuthorizedSqlQueryEvent, DbInfoEvent, SelectResponse}
+import websocket.event._
 import websocket.model.{Column, DbInfo, Table}
 
 import scala.collection.mutable
@@ -24,6 +25,8 @@ object SqlParseActor {
 }
 
 class SqlParseActor extends Actor {
+  private lazy val notifier: ActorRef = Factory.actorSystem.actorOf(NotifierActor.props, "notifier-actor")
+
   override def receive: PartialFunction[Any, Unit] = {
     case e: AuthorizedSqlQueryEvent => receiveAuthorizedSqlQueryEvent(e)
     case e: DbInfoEvent => receiveDbInfoEvent(e)
@@ -40,25 +43,38 @@ class SqlParseActor extends Actor {
       st => checkRightsAndExecute(query, st, replyTo, authInfo))
   }
 
-  private def checkRightsAndExecute(query: String, st: Statement, actorRef: ActorRef, authInfo: AuthInfo): Unit = {
+  private def checkRightsAndExecute(query: String, st: Statement, replyTo: ActorRef, authInfo: AuthInfo): Unit = {
     st match {
       case _: Select =>
         if (!authInfo.rights.exists(SqlRight.isIncludes(SqlRight.READ_ONLY, _))) {
-          actorRef ! "Unable to execute SQL query: no right to read"
+          replyTo ! "Unable to execute SQL query: no right to read"
           return
         }
         executeSelectQuery(query, authInfo).fold(
-          e => actorRef ! s"Failed to execute SQL query: ${e.getMessage}",
+          e => replyTo ! s"Failed to execute SQL query: ${e.getMessage}",
           //resp => actorRef ! Json.toJson(resp)
-          resp => actorRef ! Json.toJson("olool")
+          resp => replyTo ! Json.toJson("olool")
         )
       case _: Insert | _: Delete | _: Update =>
         if (!authInfo.rights.exists(SqlRight.isIncludes(SqlRight.DML, _))) {
-          actorRef ! "Unable to execute SQL query: no right to modify"
+          replyTo ! "Unable to execute SQL query: no right to modify"
           return
         }
-        ???
-      case _ => actorRef ! "Unsupported SQL query type"
+        import authInfo.dbConnection._
+        val url = DbUtils.JdbcUrl(host, port, database, dbms)
+        Logger.debug(logmsg(s": $url: executing query: $query"))
+        DbUtils.execInStatement(url, username, password) { st =>
+          st.executeUpdate(query)
+        }.fold(
+          e => {
+            Logger.debug(logmsg(s"$url: failed to execute query: ${e.getMessage}"))
+            replyTo ! s"Failed to execute query: ${e.getMessage}"
+          },
+          u => {
+            notifier ! NotifyEvent("execute insert", authInfo.dbConnection.id)
+          }
+        )
+      case _ => replyTo ! "Unsupported SQL query type"
     }
   }
 
@@ -88,11 +104,14 @@ class SqlParseActor extends Actor {
         tableNames += rs.getString("TABLE_NAME")
       }
       DbInfo(tableNames.map(name => {
-        val rss = connection.getMetaData.getColumns(null, null, name, null)
+        val st = connection.createStatement()
+        val rss: ResultSet = st.executeQuery(s"select * from $name;")
         var columns = mutable.ArrayBuffer.empty[Column]
-        while (rss.next()) {
-          columns += Column(rs.getString("COLUMN_NAME"), rs.getString("TYPE_NAME"))
+        val md = rss.getMetaData
+        for (i <- Range(1, md.getColumnCount + 1)) {
+          columns += Column(md.getColumnName(i), md.getColumnTypeName(i))
         }
+        st.close()
         Table(name, columns.toArray)
       }).toArray)
     }.fold(e => {
