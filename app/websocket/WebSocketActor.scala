@@ -2,8 +2,6 @@ package websocket
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import com.fasterxml.jackson.core.JsonParseException
-import com.google.inject.Inject
-import models.repository.{DatabaseRepository, UserRepository, UserRightRepository}
 import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
 import websocket.event._
@@ -14,12 +12,7 @@ object WebSocketActor {
 
 class WebSocketActor(out: ActorRef) extends Actor {
 
-  @Inject
-  var rightRepository: UserRightRepository = _
-  @Inject
-  var userRepository: UserRepository = _
-  @Inject
-  var connectionRepository: DatabaseRepository = _
+  import controllers.Factory._
 
   private val notifier: ActorRef = ActorSystem().actorOf(NotifierActor.props, "notifier-actor")
 
@@ -61,10 +54,7 @@ class WebSocketActor(out: ActorRef) extends Actor {
   }
 
   override def postStop(): Unit = {
-    authInfo match {
-      case Some(AuthInfo(connection, _)) =>
-        notifier ! RemoveUserEvent(out, connection.id)
-    }
+    authInfo.foreach(inf => notifier ! RemoveUserEvent(out, inf.dbConnection.id))
     Logger.info(logmsg("connection closed"))
   }
 
@@ -74,7 +64,7 @@ class WebSocketActor(out: ActorRef) extends Actor {
       case Some(_) =>
         connectionRepository.findById(authEvent.connectionId) match {
           case Some(connection) =>
-            val rights = rightRepository.rightsIn(authEvent.userId, authEvent.connectionId)
+            val rights = userRightRepository.rightsIn(authEvent.userId, authEvent.connectionId)
             if (rights.isEmpty) {
               out ! "No rights for this connection"
             } else {

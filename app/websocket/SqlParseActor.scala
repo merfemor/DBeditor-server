@@ -7,6 +7,7 @@ import akka.actor.{Actor, ActorRef}
 import models.entity.SqlRight
 import net.sf.jsqlparser.parser.CCJSqlParserUtil
 import net.sf.jsqlparser.statement.Statement
+import net.sf.jsqlparser.statement.create.table.CreateTable
 import net.sf.jsqlparser.statement.delete.Delete
 import net.sf.jsqlparser.statement.insert.Insert
 import net.sf.jsqlparser.statement.select.Select
@@ -28,27 +29,32 @@ class SqlParseActor extends Actor {
   private def receiveAuthorizedSqlQueryEvent(event: AuthorizedSqlQueryEvent): Unit = {
     import event._
     Logger.debug(logmsg(s"parsing SQL query: $query"))
-    Try(CCJSqlParserUtil.parse(query)).fold(e => {
-      actorRef ! s"Failed to parse SQL query: ${e.getMessage}"
-    }, st => {
-      checkRightsAndExecute(query, st, actorRef, authInfo)
-    })
+    Try(CCJSqlParserUtil.parse(query)).fold(
+      e => actorRef ! s"Failed to parse SQL query: ${e.getMessage}",
+      st => checkRightsAndExecute(query, st, actorRef, authInfo))
   }
 
   private def checkRightsAndExecute(query: String, st: Statement, actorRef: ActorRef, authInfo: AuthInfo): Unit = {
     st match {
-      case s: Select =>
+      case _: Select =>
         if (!authInfo.rights.exists(SqlRight.isIncludes(SqlRight.READ_ONLY, _))) {
           actorRef ! "Unable to execute SQL query: no right to read"
           return
         }
         executeSelectQuery(query, authInfo).fold(
           e => actorRef ! s"Failed to execute SQL query: ${e.getMessage}",
-          resp => actorRef ! Json.toJson(resp)
+          //resp => actorRef ! Json.toJson(resp)
+          resp => actorRef ! Json.toJson("olool")
         )
-      case s: Insert | Delete | Update =>
+      case _: Insert | _: Delete | _: Update =>
         if (!authInfo.rights.exists(SqlRight.isIncludes(SqlRight.DML, _))) {
           actorRef ! "Unable to execute SQL query: no right to modify"
+          return
+        }
+        ???
+      case _: CreateTable =>
+        if (!authInfo.rights.exists(SqlRight.isIncludes(SqlRight.DDL, _))) {
+          actorRef ! "Unable to execute SQL query: no right to create table"
           return
         }
         ???
@@ -56,7 +62,8 @@ class SqlParseActor extends Actor {
     }
   }
 
-  private def executeSelectQuery(query: String, authInfo: AuthInfo): Try[SelectResponse] = {
+
+  private def executeSelectQuery(query: String, authInfo: AuthInfo): Try[SelectResponse] =
     execInStatement(authInfo.dbConnection.url) { statement =>
       val rs = statement.executeQuery(query)
       val columnsRange = Range(0, rs.getMetaData.getColumnCount)
@@ -66,7 +73,6 @@ class SqlParseActor extends Actor {
       }
       SelectResponse(objs)
     }
-  }
 
   private def execInStatement[A](url: String)(fn: sql.Statement => A): Try[A] = Try {
     val con = DriverManager.getConnection(url)
