@@ -1,4 +1,4 @@
-package auth
+package controllers.auth
 
 import javax.inject.Inject
 
@@ -15,26 +15,30 @@ case class UserRequest[A](user: User, request: Request[A]) extends WrappedReques
 case class UserAction @Inject()(parser: BodyParsers.Default, userRepository: UserRepository)(implicit val executionContext: ExecutionContext)
   extends ActionBuilder[UserRequest, AnyContent] {
 
-  import UserAction._
   import Results._
+  import UserAction._
 
   override def invokeBlock[B](request: Request[B], block: UserRequest[B] => Future[Result]): Future[Result] = {
+    invokeCheckError(request).fold(Future.successful, u => block(UserRequest(u, request)))
+  }
+
+  def invokeCheckError[A](request: RequestHeader): Either[Result, User] = {
     request.cookies.get(UserUsernameCookieName) match {
       case Some(username) =>
         request.cookies.get(UserPasswordCookieName) match {
           case Some(password) =>
             userRepository.findByUsername(username.value).map { user =>
               if (password.value == user.password) {
-                block(UserRequest(user, request))
+                Right(user)
               } else {
-                Future.successful(BadRequest("Error in cookie \"" + UserPasswordCookieName+ "\": wrong password"))
+                Left(Forbidden("Error in cookie \"" + UserPasswordCookieName + "\": wrong password"))
               }
             } getOrElse {
-              Future.successful(BadRequest("Error in cookie \"" + UserUsernameCookieName + "\": no user \"" + username.value + "\""))
+              Left(Forbidden("Error in cookie \"" + UserUsernameCookieName + "\": no user \"" + username.value + "\""))
             }
-          case None => Future.successful(Unauthorized("No \"" + UserPasswordCookieName + "\" cookie set"))
+          case None => Left(Unauthorized("No \"" + UserPasswordCookieName + "\" cookie set"))
         }
-      case None => Future.successful(Unauthorized("No \"" + UserUsernameCookieName + "\" cookie set"))
+      case None => Left(Unauthorized("No \"" + UserUsernameCookieName + "\" cookie set"))
     }
   }
 }

@@ -1,4 +1,4 @@
-package auth
+package controllers.auth
 
 import javax.inject._
 
@@ -6,8 +6,6 @@ import models.entity.Database
 import models.repository._
 import play.api.mvc.Results._
 import play.api.mvc._
-
-import scala.concurrent.Future
 
 case class ConnectionCreatorRequest[A](dbConnection: Database, request: Request[A]) extends WrappedRequest[A](request)
 
