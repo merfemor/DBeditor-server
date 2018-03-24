@@ -2,7 +2,6 @@ package websocket
 
 import akka.actor.{Actor, ActorRef, Props}
 import com.fasterxml.jackson.core.JsonParseException
-import controllers.Factory._
 import models.entity.SqlRight
 import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
@@ -14,7 +13,8 @@ object WebSocketActor {
 }
 
 class WebSocketActor(out: ActorRef) extends Actor {
-  private lazy val notifier: ActorRef = actorSystem.actorOf(NotifierActor.props, "notifier-actor")
+
+  import controllers.Factory._
   private lazy val parser: ActorRef = actorSystem.actorOf(SqlParseActor.props, "sql-parse-actor")
   private var authInfo: Option[AuthInfo] = None
 

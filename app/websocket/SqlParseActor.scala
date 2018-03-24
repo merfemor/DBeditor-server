@@ -4,7 +4,7 @@ import java.sql.ResultSet
 
 import akka.actor.{Actor, ActorRef, Props}
 import controllers.Factory
-import models.entity.SqlRight
+import models.entity.{Database, SqlRight}
 import net.sf.jsqlparser.parser.CCJSqlParserUtil
 import net.sf.jsqlparser.statement.Statement
 import net.sf.jsqlparser.statement.delete.Delete
@@ -25,7 +25,8 @@ object SqlParseActor {
 }
 
 class SqlParseActor extends Actor {
-  private lazy val notifier: ActorRef = Factory.actorSystem.actorOf(NotifierActor.props, "notifier-actor")
+
+  import Factory._
 
   override def receive: PartialFunction[Any, Unit] = {
     case e: AuthorizedSqlQueryEvent => receiveAuthorizedSqlQueryEvent(e)
@@ -60,20 +61,7 @@ class SqlParseActor extends Actor {
           replyTo ! "Unable to execute SQL query: no right to modify"
           return
         }
-        import authInfo.dbConnection._
-        val url = DbUtils.JdbcUrl(host, port, database, dbms)
-        Logger.debug(logmsg(s": $url: executing query: $query"))
-        DbUtils.execInStatement(url, username, password) { st =>
-          st.executeUpdate(query)
-        }.fold(
-          e => {
-            Logger.debug(logmsg(s"$url: failed to execute query: ${e.getMessage}"))
-            replyTo ! s"Failed to execute query: ${e.getMessage}"
-          },
-          u => {
-            notifier ! NotifyEvent("execute insert", authInfo.dbConnection.id)
-          }
-        )
+        executeDmlQuery(query, st, authInfo.dbConnection, replyTo)
       case _ => replyTo ! "Unsupported SQL query type"
     }
   }
@@ -91,6 +79,24 @@ class SqlParseActor extends Actor {
       }
       SelectResponse(objs)
     }
+  }
+
+  def executeDmlQuery(query: String, statement: Statement, dbConnection: Database, replyTo: ActorRef): Unit = {
+    import dbConnection._
+    val url = DbUtils.JdbcUrl(host, port, database, dbms)
+    Logger.debug(logmsg(s"$url: executing query: $query"))
+    DbUtils.execInStatement(url, username, password) { st =>
+      st.executeUpdate(query)
+    }.fold(
+      e => {
+        Logger.debug(logmsg(s"$url: failed to execute query: ${e.getMessage}"))
+        replyTo ! s"Failed to execute query: ${e.getMessage}"
+      },
+      _ => {
+        val msg = Json.toJson(QueryUpdateEvent(query)).toString
+        notifier ! NotifyEvent(msg, id)
+      }
+    )
   }
 
   private def receiveDbInfoEvent(event: DbInfoEvent) = {
