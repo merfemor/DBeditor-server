@@ -3,6 +3,7 @@ package websocket
 import akka.actor.{Actor, ActorRef, Props}
 import com.fasterxml.jackson.core.JsonParseException
 import controllers.Factory._
+import models.entity.SqlRight
 import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
 import websocket.event._
@@ -13,7 +14,8 @@ object WebSocketActor {
 }
 
 class WebSocketActor(out: ActorRef) extends Actor {
-  private val notifier: ActorRef = actorSystem.actorOf(NotifierActor.props, "notifier-actor")
+  private lazy val notifier: ActorRef = actorSystem.actorOf(NotifierActor.props, "notifier-actor")
+  private lazy val parser: ActorRef = actorSystem.actorOf(SqlParseActor.props, "sql-parse-actor")
   private var authInfo: Option[AuthInfo] = None
 
   Logger.info(logmsg("connection opened"))
@@ -49,7 +51,7 @@ class WebSocketActor(out: ActorRef) extends Actor {
       out ! msg
     }, result => {
       Logger.debug(logmsg(s"get SQL query websocket.event: ${result.query}"))
-      //... executing sql
+      parser ! AuthorizedSqlQueryEvent(result.query, authInfo.get, out)
     })
   }
 
@@ -61,16 +63,19 @@ class WebSocketActor(out: ActorRef) extends Actor {
       case Some(_) =>
         connectionRepository.findById(authEvent.connectionId) match {
           case Some(connection) =>
-            val rights = userRightRepository.rightsIn(authEvent.userId, authEvent.connectionId)
-            if (rights.isEmpty && authEvent.userId != connection.creator.id) {
-              out ! "No rights for this connection"
+            var rights = userRightRepository.rightsIn(authEvent.userId, authEvent.connectionId)
+            if (authEvent.userId == connection.creator.id) {
+              rights = rights :+ SqlRight.DCL
+            }
+            if (rights.isEmpty) {
+              out ! "Failed to authorize: no rights for this connection"
             } else {
               authInfo = Some(AuthInfo(connection, rights))
               notifier ! AddUserEvent(out, connection.id)
               out ! "Auth OK"
             }
           case None =>
-            out ! "No connection with such id"
+            out ! "Failed to authorize: no connection with such id"
         }
       case None =>
         out ! "Failed to authorize: no such user"
@@ -79,7 +84,6 @@ class WebSocketActor(out: ActorRef) extends Actor {
 
   override def postStop(): Unit = {
     authInfo.foreach(inf => notifier ! RemoveUserEvent(out, inf.dbConnection.id))
-    out ! "connection closed"
     Logger.info(logmsg("connection closed"))
   }
 }

@@ -1,13 +1,9 @@
 package websocket
 
-import java.sql
-import java.sql.DriverManager
-
-import akka.actor.{Actor, ActorRef}
+import akka.actor.{Actor, ActorRef, Props}
 import models.entity.SqlRight
 import net.sf.jsqlparser.parser.CCJSqlParserUtil
 import net.sf.jsqlparser.statement.Statement
-import net.sf.jsqlparser.statement.create.table.CreateTable
 import net.sf.jsqlparser.statement.delete.Delete
 import net.sf.jsqlparser.statement.insert.Insert
 import net.sf.jsqlparser.statement.select.Select
@@ -19,19 +15,23 @@ import websocket.event.{AuthInfo, AuthorizedSqlQueryEvent, SelectResponse}
 
 import scala.util.Try
 
+object SqlParseActor {
+  def props = Props(new SqlParseActor)
+}
+
 class SqlParseActor extends Actor {
   override def receive: PartialFunction[Any, Unit] = {
     case e: AuthorizedSqlQueryEvent => receiveAuthorizedSqlQueryEvent(e)
-    case e =>
-      sender ! "Unknown message type"
-      Logger.error(logmsg(s"Unknown message type $e"))
   }
 
   private def receiveAuthorizedSqlQueryEvent(event: AuthorizedSqlQueryEvent): Unit = {
     import event._
     Logger.debug(logmsg(s"parsing SQL query: $query"))
     Try(CCJSqlParserUtil.parse(query)).fold(
-      e => actorRef ! s"Failed to parse SQL query: ${e.getMessage}",
+      e => {
+        actorRef ! s"Failed to parse SQL query: ${e.getMessage}"
+        Logger.debug(logmsg(s"failed to parse SQL query: ${e.getMessage}"))
+      },
       st => checkRightsAndExecute(query, st, actorRef, authInfo))
   }
 
@@ -53,12 +53,6 @@ class SqlParseActor extends Actor {
           return
         }
         ???
-      case _: CreateTable =>
-        if (!authInfo.rights.exists(SqlRight.isIncludes(SqlRight.DDL, _))) {
-          actorRef ! "Unable to execute SQL query: no right to create table"
-          return
-        }
-        ???
       case _ => actorRef ! "Unsupported SQL query type"
     }
   }
@@ -67,7 +61,7 @@ class SqlParseActor extends Actor {
   private def executeSelectQuery(query: String, authInfo: AuthInfo): Try[SelectResponse] = {
     import authInfo.dbConnection._
     val jdbcUrl = DbUtils.JdbcUrl(host, port, database, dbms)
-    execInStatement(jdbcUrl, username, password) { statement =>
+    DbUtils.execInStatement(jdbcUrl, username, password) { statement =>
       val rs = statement.executeQuery(query)
       val columnsRange = Range(0, rs.getMetaData.getColumnCount)
       val objs: Seq[Seq[Object]] = Seq[Seq[Object]]()
@@ -76,15 +70,6 @@ class SqlParseActor extends Actor {
       }
       SelectResponse(objs)
     }
-  }
-
-  private def execInStatement[A](url: String, user: String, password: String)(fn: sql.Statement => A): Try[A] = Try {
-    val con = DriverManager.getConnection(url, user, password)
-    val st = con.createStatement()
-    val res = fn(st)
-    st.close()
-    con.close()
-    res
   }
 
   private def logmsg = s"${WebSocketActor.getClass.getName}:${self.path}: " + _

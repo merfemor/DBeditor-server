@@ -13,6 +13,6 @@ public enum SqlRight {
     }
 
     public static boolean isIncludes(SqlRight right, SqlRight includes) {
-        return right.priority >= includes.priority;
+        return right.priority <= includes.priority;
     }
 }
