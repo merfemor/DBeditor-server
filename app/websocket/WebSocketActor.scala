@@ -73,6 +73,7 @@ class WebSocketActor(out: ActorRef) extends Actor {
               authInfo = Some(AuthInfo(connection, rights))
               notifier ! AddUserEvent(out, connection.id)
               out ! "Auth OK"
+              parser ! DbInfoEvent(connection, out)
             }
           case None =>
             out ! "Failed to authorize: no connection with such id"

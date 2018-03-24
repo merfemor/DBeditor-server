@@ -1,7 +1,7 @@
 package util
 
 import java.sql
-import java.sql.DriverManager
+import java.sql.{Connection, DriverManager}
 
 import models.entity.Dbms
 
@@ -18,6 +18,13 @@ object DbUtils {
     val st = con.createStatement()
     val res = fn(st)
     st.close()
+    con.close()
+    res
+  }
+
+  def execInConnection[A](url: String, user: String, password: String)(fn: Connection => A): Try[A] = Try {
+    val con = DriverManager.getConnection(url, user, password)
+    val res = fn(con)
     con.close()
     res
   }
