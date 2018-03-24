@@ -10,3 +10,6 @@
 ## WAT Queries
 - select **t0.creator_id**, t0.id, **t0.creator_id**, t0.dbms from database t0 where (t0.creator_id) in (0) ;
 - select t0.id, t0.url, t0.dbms, t0.creator_id from database t0 where **t0.id in (0,1,0,0,0)** ;
+
+# Scala
+- Guice field DI doesn't work
