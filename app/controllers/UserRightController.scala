@@ -30,6 +30,7 @@ class UserRightController @Inject()(cc: ControllerComponents,
       userRequest.body.foreach(right =>
         new UserRight(userId, connectionId, right).save()
       )
+      // TODO: notify by email if changed
       Ok(Json.toJson(userRightRepository.rightsIn(userId, connectionId)))
     }
   }

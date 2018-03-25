@@ -53,7 +53,6 @@ class SqlParseActor extends Actor {
         }
         executeSelectQuery(query, authInfo).fold(
           e => replyTo ! s"Failed to execute SQL query: ${e.getMessage}",
-          //resp => actorRef ! Json.toJson(resp)
           replyTo ! Json.toJson(_).toString
         )
       case _: Insert | _: Delete | _: Update =>
@@ -62,6 +61,7 @@ class SqlParseActor extends Actor {
           return
         }
         executeDmlQuery(query, st, authInfo.dbConnection, replyTo)
+      // TODO: parse DDL requests
       case _ => replyTo ! "Unsupported SQL query type"
     }
   }
