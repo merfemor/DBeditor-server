@@ -8,10 +8,12 @@ import models.entity.{Database, Dbms, SqlRight}
 import scala.util.Try
 
 object DbUtils {
-  def JdbcUrl(host: String, port: Int, database: String, dbms: Dbms): String =
+  def jdbcUrl(host: String, port: Int, database: String, dbms: Dbms): String =
     dbms match {
       case Dbms.PostgreSQL => s"jdbc:postgresql://$host" + (if (port > 0) s":$port" else "") + s"/$database"
     }
+
+  def jdbcUrl(db: Database): String = jdbcUrl(db.host, db.port, db.database, db.dbms)
 
   def execInStatement[A](url: String, user: String, password: String)(fn: sql.Statement => A): Try[A] = Try {
     val con = DriverManager.getConnection(url, user, password)

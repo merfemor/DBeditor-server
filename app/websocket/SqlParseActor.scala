@@ -68,7 +68,7 @@ class SqlParseActor extends Actor {
 
   private def executeSelectQuery(query: String, authInfo: AuthInfo): Try[SelectResponse] = {
     import authInfo.dbConnection._
-    val jdbcUrl = DbUtils.JdbcUrl(host, port, database, dbms)
+    val jdbcUrl = DbUtils.jdbcUrl(authInfo.dbConnection)
     DbUtils.execInStatement(jdbcUrl, username, password) { statement =>
       val rs = statement.executeQuery(query)
       val columnsRange = Range(1, rs.getMetaData.getColumnCount + 1)
@@ -82,7 +82,7 @@ class SqlParseActor extends Actor {
 
   def executeDmlQuery(query: String, statement: Statement, dbConnection: Database, replyTo: ActorRef): Unit = {
     import dbConnection._
-    val url = DbUtils.JdbcUrl(host, port, database, dbms)
+    val url = DbUtils.jdbcUrl(dbConnection)
     Logger.debug(logmsg(s"$url: executing query: $query"))
     DbUtils.execInStatement(url, username, password) { st =>
       st.executeUpdate(query)
@@ -100,7 +100,7 @@ class SqlParseActor extends Actor {
 
   private def receiveDbInfoEvent(event: DbInfoEvent): Unit = {
     import event._
-    val url = DbUtils.JdbcUrl(connection.host, connection.port, connection.database, connection.dbms)
+    val url = DbUtils.jdbcUrl(connection)
     Logger.debug(logmsg(s"reading DB info of $url"))
     DbUtils.execInConnection(url, connection.username, connection.password) { connection =>
       val rs: ResultSet = connection.getMetaData.getTables(null, null, "%", Array[String]("TABLE"))

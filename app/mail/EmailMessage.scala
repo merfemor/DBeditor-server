@@ -2,6 +2,9 @@ package mail
 
 import java.net.URL
 
+import models.entity.{Database, SqlRight}
+import util.DbUtils
+
 @SerialVersionUID(1L)
 abstract class EmailMessage(val email: String, val username: String) extends Serializable {
   def content: String
@@ -24,14 +27,18 @@ case class ConfirmEmailMessage(override val email: String, override val username
 }
 
 @SerialVersionUID(1L)
-case class JoinDatabaseNotification(override val email: String, override val username: String, creator: String)
-  extends EmailMessage(email = email, username = username) with Serializable {
+case class ConnectionRightsChangedEmail(override val email: String,
+                                        override val username: String,
+                                        whoChanged: String,
+                                        newRights: Seq[SqlRight],
+                                        connection: Database)
+  extends EmailMessage(email, username) with Serializable {
+
   override def content: String =
-    s"$username!\n\n" +
-      s"User $creator have invited you to join his database.\n\n"
+    s"User $whoChanged have changed your rights in database connection ${DbUtils.jdbcUrl(connection)}.\n" +
+      s"Now your rights are: ${newRights.map(_.toString).toSet.mkString(", ")}\n\n" +
+      s"_______\n" +
+      s"DBeditor team"
 
-  s"_______\n" +
-    s"DBeditor team"
-
-  override def subject = "Database invite"
+  override def subject = "Database rights changed"
 }
