@@ -23,10 +23,14 @@ class DatabaseRepository @Inject()(override protected val ebeanConfig: EbeanConf
       .findIds[Long]().asScala
   }
 
-  def userIdsOfConnection(connectionId: Long): Seq[Long] =
+  def userIdsOfConnection(connectionId: Long): Set[Long] =
     ebeanServer.find(classOf[UserRight])
+      .select("userRightId.userId")
+      .setDistinct(true)
       .where
-      .eq("database_id", connectionId)
-      .findIds[Long]()
+      .eq("userRightId.databaseId", connectionId)
+      .findList()
       .asScala
+      .map(_.userId)
+      .toSet
 }

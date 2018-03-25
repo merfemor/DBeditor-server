@@ -83,7 +83,7 @@ object Database {
 
   val databaseExtendedWrites = new Writes[Database] {
     override def writes(o: Database): JsObject = {
-      val userIds = Factory.connectionRepository.userIdsOfConnection(o.id).+:(o.creator.id)
+      val userIds = Factory.connectionRepository.userIdsOfConnection(o.id) + o.creator.id
       databaseWrites.writes(o).+("users", Json.toJson(userIds))
     }
   }

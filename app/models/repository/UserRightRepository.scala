@@ -25,7 +25,7 @@ class UserRightRepository @Inject()(override protected val ebeanConfig: EbeanCon
   def clearRights(userId: Long, databaseId: Long): Int =
     ebeanServer
       .createUpdate(classOf[UserRight],
-        "DELETE UserRight WHERE user_id=:userId and database_id=:databaseId")
+        "DELETE FROM UserRight WHERE user_id=:userId and database_id=:databaseId")
       .set("userId", userId)
       .set("databaseId", databaseId)
       .execute()
