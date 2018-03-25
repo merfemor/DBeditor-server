@@ -18,7 +18,6 @@ class HomeController @Inject()
   Factory.userRightRepository = _userRightRepository
 
   def index() = Action {
-    implicit request: Request[AnyContent] =>
       Ok(views.html.main())
   }
 }

@@ -46,6 +46,6 @@ class UserRepository @Inject()(override protected val ebeanConfig: EbeanConfig)
       ebeanServer.find(classOf[User])
         .where
         .eq("username", username)
-        .findUnique
+        .findOne
     )
 }

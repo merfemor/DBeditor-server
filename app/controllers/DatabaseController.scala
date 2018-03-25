@@ -2,13 +2,11 @@ package controllers
 
 import javax.inject._
 
-import controllers.auth.{ConnectionCreatorAction, ConnectionRequest, UserAction, UserRequest}
-import models.entity.Database
+import controllers.auth._
+import models.entity.{Database, SqlRight}
 import models.repository._
 import play.api.libs.json._
 import play.api.mvc._
-
-import scala.collection.JavaConverters._
 
 
 @Singleton
@@ -16,7 +14,8 @@ class DatabaseController @Inject()(cc: ControllerComponents,
                                    databaseRepository: DatabaseRepository,
                                    userRightRepository: UserRightRepository,
                                    UserAction: UserAction,
-                                   ConnectionCreatorAction: ConnectionCreatorAction)
+                                   ConnectionCreatorAction: ConnectionCreatorAction,
+                                   ConnectionUserAction: ConnectionUserAction)
   extends AbstractController(cc) {
 
 
@@ -28,19 +27,15 @@ class DatabaseController @Inject()(cc: ControllerComponents,
   }
 
   def userConnections(createdOnly: Boolean) = UserAction { request: UserRequest[AnyContent] =>
-    import request.user
-    Ok(Json.toJson(
-      if (createdOnly)
-        user.createdDatabases.asScala.map(_.id)
-      else
-        databaseRepository.managedOrCreatedBy(user.id).map(_.id)
-    ))
+    Ok(Json.toJson(databaseRepository.connectionIdsOfUser(request.user.id, createdOnly)))
   }
 
   def deleteConnection(id: Long) = UserAction {
     ConnectionCreatorAction(id) { request: ConnectionRequest[AnyContent] =>
-      request.dbConnection.delete()
-      Ok(Json.toJson(request.dbConnection))
+      import request.dbConnection
+      val jsValue = Json.toJson(dbConnection)
+      dbConnection.delete()
+      Ok(jsValue)
     }
   }
 
@@ -84,5 +79,10 @@ class DatabaseController @Inject()(cc: ControllerComponents,
     }
   }
 
-  def connectionInfo(id: Long) = play.mvc.Results.TODO
+  def connectionInfo(id: Long) = UserAction { request: UserRequest[AnyContent] =>
+    ConnectionUserAction(request, id, SqlRight.READ_ONLY) { connRequest =>
+      Ok(Json.toJson(connRequest.dbConnection))
+      // TODO: check rights and print extended info
+    }
+  }
 }

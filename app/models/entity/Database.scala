@@ -42,6 +42,8 @@ class Database extends BaseModel {
   @OneToMany(mappedBy = "database", cascade = Array(CascadeType.ALL))
   @PrimaryKeyJoinColumn
   private var userRights: util.List[UserRight] = _
+
+  override def toString = s"Database($host, $port, $database, $username, $password, $dbms)"
 }
 
 object Database {

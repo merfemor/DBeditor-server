@@ -1,28 +1,27 @@
-GET           /assets/*file                                      controllers.Assets.versioned(path="/public", file: Asset)
-GET           /                                                  controllers.HomeController.index
+GET           /assets/*file                           controllers.Assets.versioned(path="/public", file: Asset)
+GET           /                                       controllers.HomeController.index
 
 # websocket
-GET           /ws                                                controllers.WebSocketController.socket
+GET           /ws                                     controllers.WebSocketController.socket
 
 # user profile management
-GET           /user                                              controllers.UserController.currentUserInfo
-POST          /user                                              controllers.UserController.register(verificationPageLink: String ?= "http://127.0.0.1:9000/verify?code=")
-PATCH         /user                                              controllers.UserController.patchUser
-DELETE        /user                                              controllers.UserController.deleteCurrentUser
-
-GET           /verify                                            controllers.UserController.verifyEmail(code: String)
+GET           /user                                   controllers.UserController.currentUserInfo
+POST          /user                                   controllers.UserController.register(verification_page_link: String ?= "http://localhost:9000/verify?code=")
+PATCH         /user                                   controllers.UserController.patchUser
+DELETE        /user                                   controllers.UserController.deleteCurrentUser
+GET           /verify                                 controllers.UserController.verifyEmail(code: String)
 
 # other users info
-GET           /user/$id<\d+>                                     controllers.UserController.userInfo(id: Long)
-GET           /users/search                                      controllers.UserController.search(query: Option[String], page: Int ?= 0, page_size: Int ?= 20)
+GET           /user/$id<\d+>                          controllers.UserController.userInfo(id: Long)
+GET           /users/search                           controllers.UserController.search(query: Option[String], page: Int ?= 0, page_size: Int ?= 20)
 
 # database connections management
-GET           /connections                                       controllers.DatabaseController.userConnections(createdOnly: Boolean ?= false)
-GET           /connection/$id<\d+>                               controllers.DatabaseController.connectionInfo(id: Long)
-POST          /connection                                        controllers.DatabaseController.createDatabaseConnection
-PATCH         /connection/$id<\d+>                               controllers.DatabaseController.updateDatabaseConnectionInfo(id: Long)
-DELETE        /connection/$id<\d+>                               controllers.DatabaseController.deleteConnection(id: Long)
+GET           /connections                            controllers.DatabaseController.userConnections(created_only: Boolean ?= false)
+GET           /connection/$id<\d+>                    controllers.DatabaseController.connectionInfo(id: Long)
+POST          /connection                             controllers.DatabaseController.createDatabaseConnection
+PATCH         /connection/$id<\d+>                    controllers.DatabaseController.updateDatabaseConnectionInfo(id: Long)
+DELETE        /connection/$id<\d+>                    controllers.DatabaseController.deleteConnection(id: Long)
 
 # database user rights management
-GET           /connection/$cid<\d+>/user/$uid<\d+>/rights        controllers.UserRightController.ofUserInConnection(uid: Long, cid: Long)
-PATCH         /connection/$cid<\d+>/user/$uid<\d+>/rights        controllers.UserRightController.updateRights(uid: Long, cid: Long)
+GET           /rights/$cid<\d+>/user/$uid<\d+>        controllers.UserRightController.ofUserInConnection(uid: Long, cid: Long)
+PATCH         /rights/$cid<\d+>/user/$uid<\d+>        controllers.UserRightController.updateRights(uid: Long, cid: Long)
