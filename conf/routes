@@ -25,3 +25,6 @@ DELETE        /connection/$id<\d+>                    controllers.DatabaseContro
 # database user rights management
 GET           /rights/$cid<\d+>/user/$uid<\d+>        controllers.UserRightController.ofUserInConnection(uid: Long, cid: Long)
 PATCH         /rights/$cid<\d+>/user/$uid<\d+>        controllers.UserRightController.updateRights(uid: Long, cid: Long)
+
+# tech support
+POST          /support                                controllers.TechSupportController.postTechSupportMessage

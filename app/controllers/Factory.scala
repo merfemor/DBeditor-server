@@ -1,7 +1,7 @@
 package controllers
 
 import akka.actor.{ActorRef, ActorSystem}
-import models.repository.{DatabaseRepository, UserRepository, UserRightRepository}
+import models.repository.{DatabaseRepository, TechSupportRepository, UserRepository, UserRightRepository}
 import websocket.{NotifierActor, SqlParseActor}
 
 object Factory {
@@ -11,4 +11,5 @@ object Factory {
   var userRepository: UserRepository = _
   var connectionRepository: DatabaseRepository = _
   var userRightRepository: UserRightRepository = _
+  var techSupportRepository: TechSupportRepository = _
 }
