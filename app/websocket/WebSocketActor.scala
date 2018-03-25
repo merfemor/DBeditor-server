@@ -59,7 +59,11 @@ class WebSocketActor(out: ActorRef) extends Actor {
   private def receiveAuthEvent(authEvent: AuthEvent): Unit = {
     Logger.debug(logmsg("receive auth websocket.event"))
     userRepository.findById(authEvent.userId) match {
-      case Some(_) =>
+      case Some(u) =>
+        if (u.password != authEvent.userPassword) {
+          out ! "Failed to authorize: wrong password"
+          return
+        }
         connectionRepository.findById(authEvent.connectionId) match {
           case Some(connection) =>
             var rights = userRightRepository.rightsIn(authEvent.userId, authEvent.connectionId)
