@@ -3,6 +3,7 @@ package models.entity
 import java.util
 import javax.persistence._
 
+import controllers.Factory
 import io.ebean.annotation.NotNull
 
 import scala.util.Try
@@ -78,6 +79,13 @@ object Database {
       "creator_id" -> database.creator.id,
       "dbms" -> database.dbms.toString
     )
+  }
+
+  val databaseExtendedWrites = new Writes[Database] {
+    override def writes(o: Database): JsObject = {
+      val userIds = Factory.connectionRepository.userIdsOfConnection(o.id).+:(o.creator.id)
+      databaseWrites.writes(o).+("users", Json.toJson(userIds))
+    }
   }
 
   implicit val databaseReads: Reads[Database] = (

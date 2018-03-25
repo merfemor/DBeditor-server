@@ -2,7 +2,7 @@ package models.repository
 
 import javax.inject.Inject
 
-import models.entity.Database
+import models.entity.{Database, UserRight}
 import play.db.ebean.EbeanConfig
 
 import scala.collection.JavaConverters._
@@ -22,4 +22,11 @@ class DatabaseRepository @Inject()(override protected val ebeanConfig: EbeanConf
     })
       .findIds[Long]().asScala
   }
+
+  def userIdsOfConnection(connectionId: Long): Seq[Long] =
+    ebeanServer.find(classOf[UserRight])
+      .where
+      .eq("database_id", connectionId)
+      .findIds[Long]()
+      .asScala
 }

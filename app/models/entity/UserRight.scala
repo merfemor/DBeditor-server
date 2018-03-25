@@ -35,6 +35,9 @@ protected class UserRightId {
   }
 }
 
+// TODO: maybe set primary key for (user id, connection id)?
+
+
 @Entity
 @Table
 class UserRight extends Model {

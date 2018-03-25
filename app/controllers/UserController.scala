@@ -72,7 +72,6 @@ class UserController @Inject()(cc: ControllerComponents,
     }
   }
 
-
   def patchUser() = UserAction(parse.json[User](User.userReadsOptionFields)) {
     request: UserRequest[User] =>
       val newUser = request.body
@@ -111,11 +110,8 @@ class UserController @Inject()(cc: ControllerComponents,
       }
   }
 
-  def deleteCurrentUser() = UserAction {
-    request: UserRequest[AnyContent] =>
-      val user = request.user
-      user.delete()
-      Ok(Json.toJson(user))
+  def deleteCurrentUser() = UserAction { request: UserRequest[AnyContent] =>
+    Ok(Json.toJson(userRepository.deleteById(request.user.id)))
   }
 
   def verifyEmail(code: String) = Action {

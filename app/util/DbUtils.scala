@@ -3,7 +3,7 @@ package util
 import java.sql
 import java.sql.{Connection, DriverManager}
 
-import models.entity.Dbms
+import models.entity.{Database, Dbms, SqlRight}
 
 import scala.util.Try
 
@@ -28,4 +28,7 @@ object DbUtils {
     con.close()
     res
   }
+
+  def canEditRights(connection: Database, userId: Long, rights: Seq[SqlRight]): Boolean =
+    connection.creator.id == userId || rights.exists(SqlRight.isIncludes(SqlRight.DCL, _))
 }

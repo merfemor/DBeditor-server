@@ -26,7 +26,10 @@ class UserRightController @Inject()(cc: ControllerComponents,
 
   def updateRights(userId: Long, connectionId: Long) = UserAction(parse.json[Array[SqlRight]]) { userRequest: UserRequest[Array[SqlRight]] =>
     ConnectionUserAction(userRequest, connectionId, SqlRight.DCL) { _ =>
-      userRequest.body.foreach(userRightRepository.grantRight(userId, connectionId, _))
+      userRightRepository.clearRights(userId, connectionId)
+      userRequest.body.foreach(right =>
+        new UserRight(userId, connectionId, right).save()
+      )
       Ok(Json.toJson(userRightRepository.rightsIn(userId, connectionId)))
     }
   }

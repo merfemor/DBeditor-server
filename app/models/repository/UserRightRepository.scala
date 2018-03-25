@@ -3,7 +3,6 @@ package models.repository
 import javax.inject.Inject
 import javax.persistence.EntityNotFoundException
 
-import io.ebean.Ebean
 import models.entity.{SqlRight, UserRight}
 import play.db.ebean.EbeanConfig
 
@@ -13,7 +12,8 @@ class UserRightRepository @Inject()(override protected val ebeanConfig: EbeanCon
   extends BaseRepository(ebeanConfig: EbeanConfig) {
 
   def rightsIn(userId: Long, databaseId: Long): Seq[SqlRight] =
-    ebeanServer.find(classOf[UserRight])
+    ebeanServer
+      .find(classOf[UserRight])
       .where
       .eq("database_id", databaseId)
       .where
@@ -22,18 +22,17 @@ class UserRightRepository @Inject()(override protected val ebeanConfig: EbeanCon
       .asScala
       .map(_.right)
 
+  def clearRights(userId: Long, databaseId: Long): Int =
+    ebeanServer
+      .createUpdate(classOf[UserRight],
+        "DELETE UserRight WHERE user_id=:userId and database_id=:databaseId")
+      .set("userId", userId)
+      .set("databaseId", databaseId)
+      .execute()
 
-  // TODO: catch exception and make return type Option[String]
-  def grantRight(userId: Long, databaseId: Long, right: SqlRight): Unit = {
-    val newRight = new UserRight(userId, databaseId)
-    newRight.right = right
-    Ebean.insert(newRight)
-  }
-
-
+  @Deprecated
   def findRight(userId: Long, databaseId: Long, right: SqlRight): Option[UserRight] = {
-    val userRight = new UserRight(userId, databaseId)
-    userRight.right = right
+    val userRight = new UserRight(userId, databaseId, right)
     try {
       userRight.refresh()
       Some(userRight)

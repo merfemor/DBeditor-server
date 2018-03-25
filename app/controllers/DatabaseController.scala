@@ -1,13 +1,13 @@
 package controllers
 
-import javax.inject._
+import javax.inject.{Inject, Singleton}
 
 import controllers.auth._
 import models.entity.{Database, SqlRight}
-import models.repository._
-import play.api.libs.json._
-import play.api.mvc._
-
+import models.repository.{DatabaseRepository, UserRightRepository}
+import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
+import play.api.mvc.{AbstractController, AnyContent, ControllerComponents}
+import util.DbUtils
 
 @Singleton
 class DatabaseController @Inject()(cc: ControllerComponents,
@@ -32,10 +32,7 @@ class DatabaseController @Inject()(cc: ControllerComponents,
 
   def deleteConnection(id: Long) = UserAction {
     ConnectionCreatorAction(id) { request: ConnectionRequest[AnyContent] =>
-      import request.dbConnection
-      val jsValue = Json.toJson(dbConnection)
-      dbConnection.delete()
-      Ok(jsValue)
+      Ok(Json.toJson(databaseRepository.deleteById(id)))
     }
   }
 
@@ -79,10 +76,14 @@ class DatabaseController @Inject()(cc: ControllerComponents,
     }
   }
 
-  def connectionInfo(id: Long) = UserAction { request: UserRequest[AnyContent] =>
-    ConnectionUserAction(request, id, SqlRight.READ_ONLY) { connRequest =>
-      Ok(Json.toJson(connRequest.dbConnection))
-      // TODO: check rights and print extended info
+  def connectionInfo(connectionId: Long) = UserAction { request: UserRequest[AnyContent] =>
+    ConnectionUserAction(request, connectionId, SqlRight.READ_ONLY) { connRequest =>
+      val rights = userRightRepository.rightsIn(request.user.id, connectionId)
+      if (DbUtils.canEditRights(connRequest.dbConnection, request.user.id, rights)) {
+        Ok(Json.toJson[Database](connRequest.dbConnection)(Database.databaseExtendedWrites))
+      } else {
+        Ok(Json.toJson[Database](connRequest.dbConnection))
+      }
     }
   }
 }

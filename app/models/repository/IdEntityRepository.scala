@@ -9,4 +9,10 @@ protected abstract class IdEntityRepository[T: ClassTag](override protected val 
 
   def findById(id: Long)(implicit ct: ClassTag[T]): Option[T] =
     Option(ebeanServer.find(ct.runtimeClass.asInstanceOf[Class[T]], id))
+
+  def deleteById(id: Long)(implicit ct: ClassTag[T]): Option[T] =
+    findById(id)(ct).map(a => {
+      ebeanServer.delete(a)
+      a
+    })
 }
