@@ -29,22 +29,26 @@ class UserRightController @Inject()(cc: ControllerComponents,
 
   def updateRights(userId: Long, connectionId: Long) = UserAction(parse.json[Array[SqlRight]]) { userRequest: UserRequest[Array[SqlRight]] =>
     ConnectionUserAction(userRequest, connectionId, SqlRight.DCL) { connRequest =>
-      userRepository.findById(userId).map { changedUser =>
-        userRightRepository.clearRights(userId, connectionId)
-        userRequest.body.foreach(right =>
-          new UserRight(userId, connectionId, right).save()
-        )
-        val newRights = userRightRepository.rightsIn(userId, connectionId)
-        emailSender.send(ConnectionRightsChangedEmail(
-          changedUser.email,
-          changedUser.username,
-          userRequest.user.username,
-          newRights,
-          connRequest.dbConnection
-        ))
-        Ok(Json.toJson(newRights))
-      } getOrElse {
-        NotFound(s"No user with id = $userId")
+      if (userId == connRequest.dbConnection.creator.id) {
+        BadRequest("This user is creator of connection")
+      } else {
+        userRepository.findById(userId).map { changedUser =>
+          userRightRepository.clearRights(userId, connectionId)
+          userRequest.body.foreach(right =>
+            new UserRight(userId, connectionId, right).save()
+          )
+          val newRights = userRightRepository.rightsIn(userId, connectionId)
+          emailSender.send(ConnectionRightsChangedEmail(
+            changedUser.email,
+            changedUser.username,
+            userRequest.user.username,
+            newRights,
+            connRequest.dbConnection
+          ))
+          Ok(Json.toJson(newRights))
+        } getOrElse {
+          NotFound(s"No user with id = $userId")
+        }
       }
     }
   }
