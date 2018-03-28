@@ -44,8 +44,8 @@ class UserController @Inject()(cc: ControllerComponents,
     try {
       val url = new URL(verificationPageLink + info.verificationCode)
       user.save()
-      info.save()
       emailSender.send(ConfirmEmailMessage(user.email, user.username, url))
+      info.save()
       Ok(Json.toJson(user))
     } catch {
       case e: DuplicateKeyException =>

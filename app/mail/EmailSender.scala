@@ -36,8 +36,12 @@ class EmailSender {
     msg.setText(emailMessage.content)
     msg.setSubject(emailMessage.subject)
 
-    Transport.send(msg)
-    Logger.info(s"Sent email to ${emailMessage.email}")
+    try {
+      Transport.send(msg)
+      Logger.info(s"Sent email to ${emailMessage.email}")
+    } catch {
+      case e: MessagingException =>
+        Logger.error(s"failed to send email: $msg", e)
+    }
   }
-
 }
